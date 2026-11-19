@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<link rel="icon" href="data:,">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>거짓말쟁이 섬의 금고</title>
+<link rel="stylesheet" href="common/scene.css">
+</head>
+<body data-room="start">
+<div id="game">
+  <div id="title"><div class="in txt">
+    <h1>거짓말쟁이 섬의 금고</h1>
+    <p class="sub">등대에 갇혔다. 단서를 찾고, 거짓말쟁이 사이에서 진실을 가려내<br>모둠 친구들과 함께 금고를 열고 섬을 탈출하라.</p>
+    <div id="fresh">
+      <div class="q">모둠에서 내 번호를 고르세요</div>
+      <div class="nums" id="nums" role="group" aria-label="내 번호">
+        <button class="num" type="button">1</button><button class="num" type="button">2</button><button class="num" type="button">3</button><button class="num" type="button">4</button>
+      </div>
+      <button class="btn" id="start" type="button" disabled>번호를 고르세요</button>
+    </div>
+    <div id="resume" hidden>
+      <p class="saved">이전에 하던 기록이 있다.</p>
+      <p class="savedsub" id="savedsub"></p>
+      <div class="choices">
+        <button class="btn" id="continue" type="button">이어서 하기</button>
+        <button class="btn2" id="restart" type="button">새로 시작</button>
+      </div>
+    </div>
+    <div class="note">시작하면 전체 화면으로 바뀝니다. 나오려면 Esc 키를 누르세요.</div>
+  </div></div>
+</div>
+<script src="common/game.js"></script>
+<script src="vault/data.js"></script>
+<script src="room1/data.js"></script>
+<script src="common/scene.js"></script>
+<script src="room1/scene.js"></script>
+
+<script src="room2/data.js"></script>
+<script src="room2/popup.js"></script>
+<script src="room2/scene.js"></script>
+
+<script src="room3/data.js"></script>
+<script src="room3/popup.js"></script>
+<script src="room3/scene.js"></script>
+
+<script src="vault/scene.js"></script>
+<script>
+(function () {
+  var st = Game.load();
+  var member = null;
+  var startBtn = document.getElementById('start');
+  var nums = document.querySelectorAll('.num');
+
+  function begin(no) {
+    var stop = Scene.nextStop(Game.load());
+    if (window.LIAR_SCENE[stop]) {
+      document.getElementById('title').hidden = true;
+      Scene.enterGame({ member: no, roomId: stop, el: document.documentElement });
+    } else {
+      Game.setMember(no);
+      Scene.go(stop);
+    }
+  }
+
+  if (Scene.titleMode(st) === 'resume') {
+
+    var saved = st.memberNo || 1;
+    document.getElementById('fresh').hidden = true;
+    document.getElementById('resume').hidden = false;
+    document.getElementById('savedsub').textContent = '모둠 번호 ' + saved + '번으로 이어서 한다.';
+    document.getElementById('continue').addEventListener('click', function () { begin(saved); });
+    document.getElementById('restart').addEventListener('click', function () {
+      if (confirm('처음부터 다시 시작한다. 이 기기에 남은 기록(푼 방, 가방, 조각, 시간)이 모두 지워진다.')) { Game.reset(); location.reload(); }
+    });
+    return;
+  }
+
+  function pick(no) {
+    member = no;
+    nums.forEach(function (x) { x.classList.toggle('on', Number(x.textContent) === no); });
+    startBtn.disabled = false;
+    startBtn.textContent = '게임 시작';
+  }
+  nums.forEach(function (b) { b.addEventListener('click', function () { pick(Number(b.textContent)); }); });
+  startBtn.addEventListener('click', function () { if (member) begin(member); });
+})();
+</script>
+</body>
+</html>
