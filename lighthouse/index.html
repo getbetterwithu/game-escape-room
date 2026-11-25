@@ -1,0 +1,837 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>등대지기의 시험</title>
+<style>
+:root{--bg:#14161a;--panel:#1d2026;--tile:#2a2e36;--tile-h:#3a404c;--text:#ebe8e0;--mut:#9aa0ab;--gold:#e0b862;--bad:#f08a7c;--ok:#8fd4a0;--line:#3a3f49}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:16px/1.6 system-ui,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;padding:0 16px 40px}
+.wrap{max-width:980px;margin:0 auto}
+.top{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:space-between;padding:14px 0 8px}
+.top h1{font-size:18px;margin:0;color:var(--gold)}
+.goal{color:var(--mut);font-size:14px}
+button{font:inherit;color:inherit;cursor:pointer}
+.btn{background:var(--tile);border:1px solid var(--line);border-radius:8px;padding:8px 14px;min-height:44px}
+.btn:hover{background:var(--tile-h)}
+.btn.gold{background:#7a5c1e;border-color:#a8822f}
+.btn:disabled{opacity:.45;cursor:default}
+.bag{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:8px 0}
+.slot{aspect-ratio:1.25;min-height:56px;background:var(--panel);border:1px solid var(--line);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:22px;text-align:center;padding:2px}
+.slot small{font-size:11px;color:var(--mut);line-height:1.2}
+.slot.sel{outline:3px solid var(--gold);outline-offset:1px;background:#5a4a1e;box-shadow:0 0 14px rgba(224,184,98,.75)}
+.slot.sel small{color:#fff;font-weight:700}
+.slot.sel small::before{content:"✔ "}
+.slot.empty{cursor:default;opacity:.5}
+.stage{position:relative;width:100%;max-width:1100px;aspect-ratio:1672/933;margin:8px auto 0;background:#0e1013;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.stage img{display:block;width:100%;height:100%;user-select:none;-webkit-user-drag:none}
+.stage .hot{position:absolute;padding:0;margin:0;background:transparent;border:2px solid transparent;border-radius:4px;-webkit-tap-highlight-color:transparent}
+.stage .hot:hover,.stage .hot:focus-visible{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.85);outline:none}
+.say{white-space:pre-line;background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:8px;padding:12px 14px;margin-top:12px;min-height:56px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-size:14px}
+.box h4{margin:0 0 6px;font-size:13px;color:var(--gold)}
+.box p{margin:3px 0;color:var(--text)}
+.mut{color:var(--mut)}
+.bad{color:var(--bad)}.ok{color:var(--ok)}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:16px;z-index:10;overflow:auto}
+.pn{background:#1b1e24;border:1px solid #4a505c;border-radius:14px;padding:20px;max-width:560px;width:100%;max-height:92vh;overflow:auto}
+.pn h3{margin:0 0 6px;color:var(--gold);font-size:18px}
+.pn p{margin:6px 0}
+.pn .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:12px 0}
+.pn input[type=text],.pn input[type=number]{background:#0f1115;color:var(--text);border:1px solid #555c69;border-radius:8px;padding:10px;font:inherit;width:120px;min-height:44px;text-align:center}
+.dial{display:flex;gap:18px;justify-content:center;margin:14px 0}
+.dcol{display:flex;flex-direction:column;gap:6px;align-items:center}
+.dnum{font-size:40px;font-weight:700;color:var(--gold);width:70px;text-align:center;background:#0f1115;border:1px solid #555c69;border-radius:10px}
+.bubble{position:absolute;transform:translateX(-50%);width:17%;min-width:128px;background:#f6f1e4;color:#1c1a16;border-radius:10px;padding:5px 8px;font-size:12.5px;line-height:1.4;box-shadow:0 3px 12px rgba(0,0,0,.55);pointer-events:none;z-index:2;word-break:keep-all}
+.bubble b{display:block;font-size:11px;color:#7a5c1e}
+.bubble::before{content:"";position:absolute;left:50%;top:-6px;margin-left:-6px;border:6px solid transparent;border-top:0;border-bottom-color:#f6f1e4}
+table{border-collapse:collapse;width:100%;margin:8px 0}
+td,th{border:1px solid var(--line);padding:6px 8px;text-align:center}
+.lamps{display:flex;gap:10px;justify-content:center;margin:10px 0}
+.lamp{width:52px;height:52px;border-radius:50%;background:#15171b;border:2px solid #444;display:flex;align-items:center;justify-content:center;font-weight:700;color:#555}
+.lamp.on{background:#f4d58a;color:#2a1f00;border-color:#fff2c4;box-shadow:0 0 18px #f4d58a}
+.cardrow{display:grid;grid-template-columns:72px 1fr 40px;gap:10px;align-items:center;margin:8px 0}
+.card{min-height:60px;text-align:left;background:#0f1115;border:2px solid var(--line);border-radius:10px;padding:8px 12px;font-size:15px;word-break:keep-all}
+.card.wide{grid-column:1 / 3}
+.card.on{border-color:#f4d58a;background:#2d2a1e}
+.card:disabled{cursor:default;opacity:.6}
+.fig{height:60px;padding:2px;background:#fff;color:#111;border:2px solid var(--line);border-radius:8px;cursor:zoom-in}
+.fig svg{display:block;width:100%;height:100%;fill:#111}
+.figbig{background:#fff;color:#111;border-radius:10px;padding:8px}
+.figbig svg{display:block;width:100%;max-height:56vh;fill:#111}
+.cardrow .lamp{width:40px;height:40px}
+.magic{position:relative;display:grid;grid-template-columns:repeat(3,76px);gap:8px;width:244px;margin:18px auto}
+.magic svg{position:absolute;inset:0;width:244px;height:244px;overflow:visible;pointer-events:none}
+.magic line{stroke:#ffd45a;stroke-width:5;stroke-linecap:round;opacity:.42;filter:drop-shadow(0 0 4px #ffcf57)}
+.cell{height:76px;font-size:30px;font-weight:700;background:#0f1115;border:2px solid var(--line);border-radius:10px}
+.cell.fixed{cursor:default;color:var(--gold);background:#23211a}
+.cell.line{background:#f4d58a;color:#2a1f00;border-color:#fff2c4;box-shadow:0 0 14px #f4d58a}
+.tiles{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;min-height:52px}
+.tile{width:52px;height:52px;font-size:22px;font-weight:700;background:var(--tile);border:2px solid var(--line);border-radius:10px}
+.tile.sel{border-color:var(--gold);background:#5a4a1e;box-shadow:0 0 12px rgba(224,184,98,.75)}
+.rings{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.rings circle{fill:none;stroke:#ffd978;stroke-width:7;opacity:0;transform-origin:849px 365px;filter:drop-shadow(0 0 9px #ffcf57);animation:ringOn 1s ease-out forwards}
+@keyframes ringOn{from{opacity:0;transform:rotate(-120deg)}to{opacity:.75;transform:none}}
+.rings.spin circle{opacity:.9;animation:ringSpin 2.2s cubic-bezier(.5,0,.3,1) forwards}
+.rings.spin circle:nth-child(2){animation-direction:reverse}
+@keyframes ringSpin{from{opacity:.75;transform:none}to{opacity:1;transform:rotate(360deg)}}
+.safe{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.safe .inside{animation:safeIn .5s both}
+.safe .door{transform-origin:1180px 365px;animation:safeDoor 1.7s cubic-bezier(.5,0,.25,1) .3s both}
+@keyframes safeIn{from{opacity:0}to{opacity:1}}
+@keyframes safeDoor{to{transform:skewY(-4deg) scaleX(.13)}}
+.safe .goods{animation:safeIn .8s 1.4s both}
+.safe text{font-family:sans-serif;font-weight:700;text-anchor:middle}
+.baseball td{font-size:18px}
+.baseball td:first-child{font-size:24px;font-weight:700;letter-spacing:6px}
+.pn.lockpn{max-width:720px;background:#14100b;border-color:#6b5026}
+.lock{border-radius:12px;overflow:hidden;margin:8px 0}
+.lock svg{display:block;width:100%;max-height:54vh;user-select:none}
+.lock.won svg{filter:drop-shadow(0 0 14px #ffd45a) brightness(1.12)}
+.lock.shake{animation:shake .45s}
+@keyframes shake{20%,60%{transform:translateX(-9px)}40%,80%{transform:translateX(9px)}}
+.lock .digit{font-family:"Times New Roman",serif;font-weight:700;font-variant-numeric:lining-nums;fill:#2c1a06;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.lock .wheel{cursor:pointer;outline:none}
+.lock .zone{fill:transparent}
+.lock .wheel:hover .zone,.lock .wheel:focus-visible .zone{fill:rgba(255,196,84,.2)}
+.lock .arrow{fill:#7a5a22;opacity:.6;pointer-events:none}
+.lock .roll{animation:roll .22s ease-out}
+@keyframes roll{from{transform:translateY(var(--from));opacity:.2}to{transform:none;opacity:1}}
+.travel{position:fixed;inset:0;z-index:20;background:#000;overflow:hidden;cursor:pointer}
+.travel img{position:absolute;inset:0;margin:auto;width:100%;height:100%;object-fit:contain}
+.travel .from{animation:goIn 2s cubic-bezier(.55,0,.8,.6) both}
+@keyframes goIn{0%{opacity:1;transform:scale(1)}70%{opacity:1}100%{opacity:0;transform:scale(3.2)}}
+.travel .to{opacity:0;animation:arrive 2.2s ease-out 1.7s both}
+@keyframes arrive{from{opacity:0;transform:scale(1.25)}to{opacity:1;transform:scale(1)}}
+.travel p{position:absolute;left:0;right:0;bottom:9%;margin:0;text-align:center;font-size:clamp(20px,3.4vw,34px);font-weight:700;color:#ffe6a8;text-shadow:0 3px 12px #000;animation:cap 2s ease-out 1.8s both}
+.travel small{position:absolute;right:16px;bottom:12px;color:#cfc8b8;opacity:.7}
+@keyframes cap{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+.endscr{position:fixed;inset:0;z-index:8;background:#000;overflow:hidden}
+.endscr img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform-origin:73% 52%;animation:dawn 12s ease-out both}
+@keyframes dawn{0%{opacity:0;filter:brightness(2.6)}18%{opacity:1;filter:brightness(1.6)}34%{filter:brightness(1)}100%{opacity:1;transform:scale(1.12)}}
+.endscr h2{position:absolute;top:5%;left:0;right:0;margin:0;text-align:center;font-size:clamp(26px,5vw,52px);color:#fff4d2;text-shadow:0 3px 16px #3a1c00;animation:cap 1.4s ease-out 2.6s both}
+.endscr .letter{position:absolute;left:50%;bottom:92px;transform:translateX(-50%);width:min(640px,92%);background:rgba(243,231,200,.95);color:#2f2210;border-radius:10px;padding:14px 22px;box-shadow:0 10px 40px rgba(0,0,0,.6);animation:fade2 1s ease-out 6s both}
+@keyframes fade2{from{opacity:0}to{opacity:1}}
+.endscr .letter p{margin:6px 0;text-align:center;word-break:keep-all}
+.endscr .letter.folded{display:none}
+.endscr .row{position:absolute;left:0;right:0;bottom:28px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;animation:fade2 1s ease-out 7s both}
+@media(max-width:640px){.cols{grid-template-columns:1fr}}
+
+.fxl{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:hidden}
+.fxl text{font-family:sans-serif;font-weight:700;text-anchor:middle}
+.fxl .fx{display:none}
+.fxl .fx.show{display:inline;animation:fxfade .35s both}
+@keyframes fxfade{from{opacity:0}to{opacity:1}}
+.stage .hot{z-index:1}
+.blocker{position:fixed;inset:0;z-index:9}
+.fxl.r1 .show .twinkle{animation:r1_twinkle 1.1s ease-in-out 3 both;transform-box:fill-box;transform-origin:center}
+@keyframes r1_twinkle{0%,100%{opacity:0;transform:scale(.3)}50%{opacity:1;transform:scale(1.15)}}
+.fxl.r1 .show .rise{animation:r1_rise .9s cubic-bezier(.3,1.4,.5,1) .5s both}
+@keyframes r1_rise{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:none}}
+.fxl.r1 .show .got{animation:r1_got .5s ease-in 2.4s forwards}
+@keyframes r1_got{to{opacity:0}}
+.fxl.r1 .show .pull{animation:r1_pull .8s cubic-bezier(.3,1.4,.5,1) both}
+@keyframes r1_pull{to{transform:translate(0,34px)}}
+.fxl.r1 .show .tilt{animation:r1_tilt 1s cubic-bezier(.3,1.6,.5,1) both;transform-origin:759px 118px}
+@keyframes r1_tilt{to{transform:rotate(7deg)}}
+.fxl.r1 .show .peek{animation:r1_rise .8s .7s both}
+.fxl.r1 .show .swing{animation:r1_swing 1s ease-in-out both;transform-origin:1100px 500px}
+@keyframes r1_swing{to{transform:skewY(-9deg) scaleX(.2)}}
+.fxl.r1 .show .halfL{animation:r1_joinL 1s ease-out both}
+.fxl.r1 .show .halfR{animation:r1_joinR 1s ease-out both}
+@keyframes r1_joinL{from{transform:translate(-300px,60px) rotate(-8deg)}to{transform:none}}
+@keyframes r1_joinR{from{transform:translate(300px,-60px) rotate(9deg)}to{transform:none}}
+.fxl.r1 .show .ink{animation:fade .7s 1.1s both}
+.fxl.r1 .show .ring{animation:r1_ring 1s ease-out 3 both;transform-origin:393px 407px}
+@keyframes r1_ring{from{transform:scale(.5);opacity:1}to{transform:scale(2.2);opacity:0}}
+.fxl.r1 .show .doorswing{animation:r1_door 1.8s cubic-bezier(.5,0,.3,1) .2s both;transform-origin:47px 480px}
+@keyframes r1_door{to{transform:skewY(5deg) scaleX(.22)}}
+.fxl.r1 .show .beamin,.fxl.r1 .show .floorlight{animation:fade 1.6s .7s backwards}
+.fxl.r2 [data-fx="fuse"].show .spark{animation:r2_spark .9s ease-out forwards}
+.fxl.r2 [data-fx="fuse"].show .filament{animation:r2_flick .25s steps(2) 5}
+.fxl.r2 [data-fx="fuse"].show .pilot{animation:r2_flick .4s steps(2) 3;filter:drop-shadow(0 0 10px #66ff8a)}
+@keyframes r2_spark{0%{opacity:1}20%{opacity:.1}40%{opacity:1}100%{opacity:0}}
+@keyframes r2_flick{50%{opacity:.2}}
+.fxl.r2 [data-fx="lever"] .arm{transform-origin:187px 388px;transform:rotate(125deg);transition:transform .6s cubic-bezier(.3,1.6,.5,1) .35s}
+.fxl.r2 [data-fx="lever"].up .arm{transform:rotate(0deg)}
+.fxl.r2 [data-fx="needle"] .hand{transform-origin:637px 828px;transition:transform 1.4s cubic-bezier(.3,1.4,.5,1) .7s}
+.fxl.r2 [data-fx="needle"].up .hand{transform:rotate(180deg)}
+.fxl.r2 [data-fx="needle"] .face{transition:opacity .2s}
+.fxl.r2 [data-fx="needle"].up .face{opacity:1}
+.fxl.r2 .num-on.show{animation:r2_flick .3s steps(2) 3 .8s both}
+.fxl.r2 .drop.show{animation:r2_drop .5s ease-out}
+@keyframes r2_drop{from{transform:translateY(-40px)}to{transform:none}}
+.fxl.r2 .show.drop .shine{animation:r2_shine 1.2s ease-out .4s forwards}
+.fxl.r2 .shine{opacity:0}
+@keyframes r2_shine{25%{opacity:1}100%{opacity:0}}
+.fxl.r2 .dome.show{filter:drop-shadow(0 0 22px #ffd978)}
+.fxl.r2 [data-fx="beam"].show .rot{transform-origin:840px 245px;animation:r2_sweep 3.2s ease-in-out infinite alternate}
+@keyframes r2_sweep{from{transform:rotate(-9deg) scaleX(.75)}to{transform:rotate(9deg) scaleX(1)}}
+.fxl.r2 .show .arm{transform-origin:187px 388px;animation:r2_armUp .6s cubic-bezier(.3,1.6,.5,1) .35s both}
+@keyframes r2_armUp{from{transform:rotate(125deg)}to{transform:none}}
+.fxl.r2 [data-fx="needle"].show .hand{transform-origin:637px 828px;animation:r2_needleUp 1.4s cubic-bezier(.3,1.4,.5,1) .7s both}
+@keyframes r2_needleUp{to{transform:rotate(180deg)}}
+.fxl.r2 [data-fx="needle"] .face{opacity:1}
+.fxl.r2 .ctext{fill:#3a2a08;font-size:22px}
+.fxl.r2 .lb{fill:#e0b862;font-size:20px}
+.fxl.r3 .show .twinkle{animation:r3_twinkle 1.1s ease-in-out 3 both;transform-box:fill-box;transform-origin:center}
+@keyframes r3_twinkle{0%,100%{opacity:0;transform:scale(.3)}50%{opacity:1;transform:scale(1.15)}}
+.fxl.r3 .show .rise{animation:r3_rise .9s cubic-bezier(.3,1.4,.5,1) .5s both}
+@keyframes r3_rise{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:none}}
+.fxl.r3 .show .got{animation:r3_got .5s ease-in 2.4s forwards}
+@keyframes r3_got{to{opacity:0}}
+.fxl.r3 .show .lidup{animation:r3_lidup .7s cubic-bezier(.3,1.5,.5,1) both;transform-origin:510px 290px}
+@keyframes r3_lidup{from{transform:scaleY(.05)}to{transform:scaleY(1)}}
+.fxl.r3 .show .glass{animation:r3_glass .8s cubic-bezier(.3,1.3,.5,1) both;transform-origin:1310px 548px}
+@keyframes r3_glass{from{transform:scale(.12)}to{transform:scale(1)}}
+.fxl.r3 .show .blur{animation:r3_focus 1.3s .6s both}
+@keyframes r3_focus{from{filter:blur(9px)}to{filter:blur(0)}}
+.fxl.r3 .show .lidpop{animation:r3_pop 1.1s cubic-bezier(.3,1.3,.5,1) both;transform-origin:647px 476px}
+@keyframes r3_pop{15%{transform:translate(0,-5px) rotate(2deg)}30%{transform:none}45%{transform:translate(0,-9px) rotate(4deg)}60%{transform:none}100%{transform:translate(16px,-26px) rotate(17deg)}}
+.fxl.r3 .show .burst{animation:r3_burst 1.4s .6s both}
+@keyframes r3_burst{0%,100%{opacity:0}35%{opacity:.9}}
+.fxl.r3 .show .sheen{animation:r3_sheen 1.7s ease-in-out .5s both}
+@keyframes r3_sheen{from{x:430px}to{x:1250px}}
+.fxl.r3 .show .drip{animation:r3_drip .5s ease-in both}
+.fxl.r3 .show .d2{animation-delay:.25s}
+.fxl.r3 .show .d3{animation-delay:.45s}
+@keyframes r3_drip{from{transform:translateY(-120px);opacity:0}to{transform:none;opacity:1}}
+.fxl.r3 .show .drop{animation:r3_drop .7s cubic-bezier(.4,1.8,.6,1) both}
+@keyframes r3_drop{from{transform:translateY(-150px)}to{transform:none}}
+.fxl.r3 .show .turn{animation:r3_gone .2s 1.4s forwards}
+@keyframes r3_gone{to{opacity:0}}
+.fxl.r3 .show .spin{animation:r3_spin 1.4s cubic-bezier(.5,0,.3,1) both}
+@keyframes r3_spin{to{transform:rotate(540deg)}}
+.fxl.r3 .show .hole{animation:fade .3s 1.4s both}
+.fxl.r3 .show .lift{animation:r3_lift 1.1s cubic-bezier(.4,0,.2,1) 1.4s both;transform-origin:728px 704px}
+@keyframes r3_lift{from{opacity:1;transform:none}to{opacity:1;transform:translateY(-6px) scaleY(-.55)}}
+.fxl.r3 .lift{opacity:0}
+.fxl.r3 .show .shaft{animation:fade 1.4s 2s both}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <h1>🏮 등대지기의 시험</h1>
+    <div><span id="place" class="goal"></span></div>
+  </div>
+  <div class="goal" id="goal"></div>
+  <div class="bag" id="bag"></div>
+  <div class="stage" id="scene"></div>
+  <div class="say" id="say" aria-live="polite">...</div>
+  <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+    <button class="btn" id="hintBtn">💡 힌트</button>
+    <span id="hintTxt" class="mut" style="align-self:center;font-size:14px"></span>
+  </div>
+  <div class="cols">
+    <div class="box" id="notes"><h4>기록</h4><p class="mut">아직 없음</p></div>
+    <div class="box" id="side"></div>
+  </div>
+</div>
+
+<script>
+'use strict';
+const ITEMS={
+  handle:{i:'🔩',n:'놋 손잡이',d:'서랍에 끼울 수 있을 듯한 작은 놋 손잡이.'},
+  key:{i:'🗝️',n:'낡은 열쇠',d:'낡은 열쇠다. 어디에 쓸까?'},
+  noteL:{i:'📄',n:'찢긴 쪽지 왼쪽',d:'찢긴 쪽지의 왼쪽 반이다. 나머지 반이 어딘가 있을 것이다.'},
+  noteR:{i:'📄',n:'찢긴 쪽지 오른쪽',d:'찢긴 쪽지의 오른쪽 반이다. 나머지 반이 어딘가 있을 것이다.'},
+  note:{i:'📜',n:'완성된 쪽지',d:'쪽지: “셋 중 진실을 말하는 이는 딱 한 명.\n진실한 자의 근무 일수에서 거짓말쟁이들의 벌점을 빼고, 그 수만큼 자물쇠를 올려라.”'},
+  flash:{i:'🔦',n:'손전등',d:'묵직한 손전등이다. 어두운 곳을 비출 수 있겠다.'},
+  fuse:{i:'🔌',n:'유리관 퓨즈',d:'먼지 낀 유리관 퓨즈다. 어딘가의 빈 퓨즈 자리에 맞겠다.'},
+  gloves:{i:'🧤',n:'절연 장갑',d:'두꺼운 고무 장갑이다. 전기를 만질 때 필요하겠다.'},
+  lever:{i:'🛠️',n:'황동 레버',d:'묵직한 황동 레버다. 어딘가에 끼워서 당기는 것 같다.'},
+  card2:{i:'🃏',n:'2번 카드',d:'“2”라고 적힌 카드다. 어딘가에 꽂는 것 같다.'},
+  card4:{i:'🎴',n:'4번 카드',d:'“4”라고 적힌 카드다. 어딘가에 꽂는 것 같다.'},
+  lens:{i:'🔍',n:'돋보기',d:'황동 테를 두른 돋보기다. 흐리거나 작은 글씨에 대 보면 좋겠다.'},
+  crowbar:{i:'⛏️',n:'쇠지렛대',d:'녹슨 쇠지렛대다. 못을 뽑을 수 있다.'},
+  valve:{i:'🎛️',n:'무쇠 밸브 핸들',d:'무언가를 돌려서 여는 데 쓰는 핸들 같다.'},
+  oil:{i:'🛢️',n:'윤활유',d:'기름통이다. 뻑뻑하게 굳은 곳에 바르면 되겠다.'}
+};
+
+const FX={"r1": "<svg class=\"fxl r1\" viewBox=\"0 0 1672 933\" aria-hidden=\"true\"><defs><image id=\"bg\" href=\"img/room1.jpg\" width=\"1672\" height=\"933\"/><radialGradient id=\"glow\"><stop offset=\"0\" stop-color=\"#fffbe0\"/><stop offset=\".4\" stop-color=\"#ffd35a\" stop-opacity=\".75\"/><stop offset=\"1\" stop-color=\"#ff9a1f\" stop-opacity=\"0\"/></radialGradient>\n<linearGradient id=\"down\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0\" stop-color=\"#050403\"/><stop offset=\"1\" stop-color=\"#1c130a\"/></linearGradient><clipPath id=\"cDrawer\"><rect x=\"593\" y=\"602\" width=\"221\" height=\"52\"/></clipPath><clipPath id=\"cFrame\"><rect x=\"601\" y=\"114\" width=\"316\" height=\"271\"/></clipPath><clipPath id=\"cLocker\"><rect x=\"978\" y=\"240\" width=\"122\" height=\"555\"/></clipPath><clipPath id=\"cDoor\"><path d=\"M47 805 V262 C55 175 120 124 190 124 C262 124 328 180 333 265 V805 Z\"/></clipPath></defs>\n<g data-fx=\"lamp\" class=\"fx\"><circle class=\"twinkle\" cx=\"545\" cy=\"535\" r=\"70\" fill=\"url(#glow)\"/><g class=\"rise\"><path d=\"M522 566 h46\" stroke=\"#e8c46a\" stroke-width=\"10\" stroke-linecap=\"round\"/><circle cx=\"545\" cy=\"566\" r=\"11\" fill=\"#f6d98a\"/></g></g>\n<g data-fx=\"drawer\" class=\"fx\"><rect x=\"593\" y=\"602\" width=\"221\" height=\"52\" fill=\"#080503\"/>\n <g class=\"pull\"><g clip-path=\"url(#cDrawer)\"><use href=\"#bg\"/></g><rect x=\"593\" y=\"602\" width=\"221\" height=\"52\" fill=\"none\" stroke=\"#c99b55\" stroke-width=\"2\"/>\n  <circle cx=\"703\" cy=\"628\" r=\"13\" fill=\"#e8c46a\" stroke=\"#6b4d1c\" stroke-width=\"3\"/></g>\n <g class=\"got\"><g class=\"rise\"><circle class=\"twinkle\" cx=\"705\" cy=\"600\" r=\"55\" fill=\"url(#glow)\"/><g transform=\"translate(668 590)\" stroke=\"#f0cd72\" stroke-width=\"7\" fill=\"none\"><circle r=\"13\"/><path d=\"M13 0H62M50 0v14M62 0v14\"/></g></g></g></g>\n<g data-fx=\"frame\" class=\"fx\"><rect x=\"601\" y=\"114\" width=\"316\" height=\"271\" fill=\"#2a2119\"/>\n <path class=\"peek\" d=\"M846 332 l70 12 -12 62 -68 -14 z\" fill=\"#e5d6b0\" stroke=\"#8a7346\" stroke-width=\"3\"/>\n <g class=\"tilt\"><g clip-path=\"url(#cFrame)\"><use href=\"#bg\"/></g></g></g>\n<g data-fx=\"locker\" class=\"fx\"><rect x=\"978\" y=\"240\" width=\"122\" height=\"555\" fill=\"url(#down)\" stroke=\"#2b2f33\" stroke-width=\"5\"/>\n <path d=\"M982 430 H1096 M982 610 H1096\" stroke=\"#4a4f55\" stroke-width=\"7\"/>\n <g class=\"rise\"><path d=\"M1004 410 l52 -10 8 28 -54 6 z\" fill=\"#e5d6b0\"/><rect x=\"1008\" y=\"578\" width=\"60\" height=\"22\" rx=\"8\" fill=\"#8b9199\"/><rect x=\"1060\" y=\"572\" width=\"22\" height=\"34\" rx=\"5\" fill=\"#c9ced5\"/><circle class=\"twinkle\" cx=\"1040\" cy=\"505\" r=\"70\" fill=\"url(#glow)\"/></g>\n <g class=\"swing\"><g clip-path=\"url(#cLocker)\"><use href=\"#bg\"/></g><rect x=\"978\" y=\"240\" width=\"122\" height=\"555\" fill=\"#000\" opacity=\".28\"/></g></g>\n<g data-fx=\"note\" class=\"fx\"><rect width=\"1672\" height=\"933\" fill=\"#000\" opacity=\".62\"/>\n <g class=\"halfL\"><path d=\"M536 300 H842 L818 360 L850 420 L814 486 L840 560 H536 Z\" fill=\"#dccaa0\"/></g>\n <g class=\"halfR\"><path d=\"M842 300 H1136 V560 H840 L814 486 L850 420 L818 360 Z\" fill=\"#d6c397\"/></g>\n <g class=\"ink\"><text x=\"836\" y=\"392\" font-size=\"27\" fill=\"#3a2a12\">셋 중 진실을 말하는 이는 딱 한 명.</text>\n  <text x=\"836\" y=\"448\" font-size=\"25\" fill=\"#3a2a12\">진실한 자의 근무 일수에서</text>\n  <text x=\"836\" y=\"486\" font-size=\"25\" fill=\"#3a2a12\">거짓말쟁이들의 벌점을 빼고,</text>\n  <text x=\"836\" y=\"524\" font-size=\"25\" fill=\"#3a2a12\">그 수만큼 자물쇠를 올려라.</text></g></g>\n<g data-fx=\"pad\" class=\"fx\"><circle class=\"twinkle\" cx=\"393\" cy=\"407\" r=\"95\" fill=\"url(#glow)\"/><circle class=\"ring\" cx=\"393\" cy=\"407\" r=\"33\" fill=\"none\" stroke=\"#ffe9a0\" stroke-width=\"5\"/></g>\n<g data-fx=\"padopen\" class=\"fx\"><g><rect x=\"368\" y=\"380\" width=\"52\" height=\"56\" rx=\"6\" fill=\"#17100a\" stroke=\"#d9b362\" stroke-width=\"3\"/><text x=\"381\" y=\"418\" font-size=\"30\" fill=\"#ffe39a\">9</text><text x=\"407\" y=\"418\" font-size=\"30\" fill=\"#ffe39a\">2</text><path d=\"M420 380 L450 392 V428 L420 436 Z\" fill=\"#a98440\" stroke=\"#5f4519\" stroke-width=\"3\"/></g></g>\n<g data-fx=\"open\" class=\"fx\">\n <path d=\"M47 805 V262 C55 175 120 124 190 124 C262 124 328 180 333 265 V805 Z\" fill=\"#1a0f06\"/>\n <g fill=\"#8a6030\"><path d=\"M70 805 H325 L305 735 H92Z\" opacity=\".95\"/><path d=\"M96 735 H301 L283 668 H116Z\" opacity=\".8\"/><path d=\"M120 668 H279 L262 606 H138Z\" opacity=\".65\"/><path d=\"M142 606 H258 L244 552 H158Z\" opacity=\".5\"/></g>\n <ellipse class=\"beamin\" cx=\"205\" cy=\"400\" rx=\"115\" ry=\"230\" fill=\"url(#glow)\" opacity=\".8\"/>\n <g class=\"doorswing\"><g clip-path=\"url(#cDoor)\"><use href=\"#bg\"/></g></g>\n <path class=\"floorlight\" d=\"M80 805 L320 805 L520 933 L10 933 Z\" fill=\"#ffcf6a\" opacity=\".22\"/></g>\n</svg>", "r2": "<svg class=\"fxl r2\" viewBox=\"0 0 1672 933\" aria-hidden=\"true\"><defs><image id=\"bg\" href=\"img/room2.jpg\" width=\"1672\" height=\"933\"/>\n <radialGradient id=\"glow\"><stop offset=\"0\" stop-color=\"#fffbe0\"/><stop offset=\".55\" stop-color=\"#ffcf57\" stop-opacity=\".95\"/><stop offset=\"1\" stop-color=\"#ff9a1f\" stop-opacity=\".35\"/></radialGradient>\n <radialGradient id=\"lensglow\"><stop offset=\"0\" stop-color=\"#fffdf0\" stop-opacity=\".95\"/><stop offset=\".5\" stop-color=\"#ffe08a\" stop-opacity=\".55\"/><stop offset=\"1\" stop-color=\"#ffe08a\" stop-opacity=\"0\"/></radialGradient>\n <linearGradient id=\"ray\" gradientUnits=\"userSpaceOnUse\" x1=\"840\" y1=\"0\" x2=\"1840\" y2=\"0\" spreadMethod=\"reflect\"><stop offset=\"0\" stop-color=\"#fff3bd\" stop-opacity=\".6\"/><stop offset=\"1\" stop-color=\"#fff3bd\" stop-opacity=\"0\"/></linearGradient>\n</defs><g data-fx=\"box\" class=\"fx\">\n <rect x=\"104\" y=\"196\" width=\"165\" height=\"226\" rx=\"6\" fill=\"#15171a\" stroke=\"#6b7078\" stroke-width=\"5\"/>\n <path d=\"M104 196 L60 214 L60 410 L104 422 Z\" fill=\"#53575e\" stroke=\"#25282c\" stroke-width=\"4\"/>\n <text x=\"187\" y=\"228\" class=\"lb\">퓨즈</text>\n <rect x=\"136\" y=\"240\" width=\"102\" height=\"44\" rx=\"8\" fill=\"#08090a\" stroke=\"#8a7a4a\" stroke-width=\"3\" stroke-dasharray=\"7 6\"/>\n <text x=\"187\" y=\"322\" class=\"lb\">레버</text>\n <rect x=\"176\" y=\"334\" width=\"22\" height=\"70\" rx=\"11\" fill=\"#08090a\" stroke=\"#8a7a4a\" stroke-width=\"3\" stroke-dasharray=\"7 6\"/>\n</g>\n<g data-fx=\"fuse\" class=\"fx\">\n <rect x=\"140\" y=\"247\" width=\"94\" height=\"30\" rx=\"14\" fill=\"#bfe9ff\" opacity=\".85\"/>\n <rect x=\"136\" y=\"244\" width=\"20\" height=\"36\" fill=\"#b08d45\"/><rect x=\"218\" y=\"244\" width=\"20\" height=\"36\" fill=\"#b08d45\"/>\n <path class=\"filament\" d=\"M158 262 l12 -9 12 16 12 -16 12 9 12 0\" fill=\"none\" stroke=\"#ff9d2e\" stroke-width=\"4\"/>\n <g class=\"spark\" stroke=\"#fff3a0\" stroke-width=\"5\"><path d=\"M130 240 l-24 -20M246 240 l24 -22M130 288 l-26 16M246 288 l26 18M187 238 l0 -30\"/></g>\n <circle class=\"pilot\" cx=\"248\" cy=\"212\" r=\"9\" fill=\"#66ff8a\"/>\n</g>\n<g data-fx=\"lever\" class=\"fx\">\n <g class=\"arm\"><rect x=\"180\" y=\"348\" width=\"14\" height=\"40\" rx=\"7\" fill=\"#c9a24e\"/><circle cx=\"187\" cy=\"350\" r=\"14\" fill=\"#e8c46a\"/></g>\n</g>\n<g data-fx=\"needle\" class=\"fx\"><circle cx=\"637\" cy=\"828\" r=\"50\" fill=\"#d9d3c3\" opacity=\"0\" class=\"face\"/>\n <g class=\"hand\"><line x1=\"637\" y1=\"828\" x2=\"600\" y2=\"862\" stroke=\"#14110c\" stroke-width=\"6\" stroke-linecap=\"round\"/><circle cx=\"637\" cy=\"828\" r=\"8\" fill=\"#14110c\"/></g></g>\n<g data-fx=\"num0\" class=\"fx\"><rect x=\"539\" y=\"652\" width=\"76\" height=\"23\" rx=\"2\" fill=\"#d6ad55\"/></g>\n<g data-fx=\"num1\" class=\"fx\"><rect x=\"672\" y=\"652\" width=\"76\" height=\"23\" rx=\"2\" fill=\"#d6ad55\"/></g>\n<g data-fx=\"num2\" class=\"fx\"><rect x=\"804\" y=\"652\" width=\"76\" height=\"23\" rx=\"2\" fill=\"#d6ad55\"/></g>\n<g data-fx=\"num3\" class=\"fx\"><rect x=\"938\" y=\"652\" width=\"76\" height=\"23\" rx=\"2\" fill=\"#d6ad55\"/></g>\n<g data-fx=\"num4\" class=\"fx\"><rect x=\"1070\" y=\"652\" width=\"76\" height=\"23\" rx=\"2\" fill=\"#d6ad55\"/></g>\n<g data-fx=\"card0\" class=\"fx\"><rect x=\"541\" y=\"682\" width=\"72\" height=\"30\" rx=\"4\" fill=\"#efe6cc\" stroke=\"#8a6f35\" stroke-width=\"2\"/><text x=\"577\" y=\"703\" class=\"ctext\">1</text></g>\n<rect data-fx=\"empty1\" class=\"fx\" x=\"674\" y=\"682\" width=\"72\" height=\"30\" rx=\"4\" fill=\"rgba(0,0,0,.55)\" stroke=\"#e0b862\" stroke-width=\"2\" stroke-dasharray=\"6 5\"/>\n<g data-fx=\"card1\" class=\"fx drop\"><rect x=\"674\" y=\"682\" width=\"72\" height=\"30\" rx=\"4\" fill=\"#efe6cc\" stroke=\"#8a6f35\" stroke-width=\"2\"/><text x=\"710\" y=\"703\" class=\"ctext\">2</text><rect class=\"shine\" x=\"666\" y=\"674\" width=\"88\" height=\"46\" rx=\"8\" fill=\"none\" stroke=\"#fff3a0\" stroke-width=\"5\"/></g>\n<g data-fx=\"card2\" class=\"fx\"><rect x=\"806\" y=\"682\" width=\"72\" height=\"30\" rx=\"4\" fill=\"#efe6cc\" stroke=\"#8a6f35\" stroke-width=\"2\"/><text x=\"842\" y=\"703\" class=\"ctext\">3</text></g>\n<rect data-fx=\"empty3\" class=\"fx\" x=\"940\" y=\"682\" width=\"72\" height=\"30\" rx=\"4\" fill=\"rgba(0,0,0,.55)\" stroke=\"#e0b862\" stroke-width=\"2\" stroke-dasharray=\"6 5\"/>\n<g data-fx=\"card3\" class=\"fx drop\"><rect x=\"940\" y=\"682\" width=\"72\" height=\"30\" rx=\"4\" fill=\"#efe6cc\" stroke=\"#8a6f35\" stroke-width=\"2\"/><text x=\"976\" y=\"703\" class=\"ctext\">4</text><rect class=\"shine\" x=\"932\" y=\"674\" width=\"88\" height=\"46\" rx=\"8\" fill=\"none\" stroke=\"#fff3a0\" stroke-width=\"5\"/></g>\n<g data-fx=\"card4\" class=\"fx\"><rect x=\"1072\" y=\"682\" width=\"72\" height=\"30\" rx=\"4\" fill=\"#efe6cc\" stroke=\"#8a6f35\" stroke-width=\"2\"/><text x=\"1108\" y=\"703\" class=\"ctext\">5</text></g>\n<circle data-fx=\"dome0\" class=\"fx dome\" cx=\"592\" cy=\"541\" r=\"33\" fill=\"url(#glow)\"/>\n<circle data-fx=\"dome1\" class=\"fx dome\" cx=\"716\" cy=\"541\" r=\"33\" fill=\"url(#glow)\"/>\n<circle data-fx=\"dome2\" class=\"fx dome\" cx=\"840\" cy=\"541\" r=\"33\" fill=\"url(#glow)\"/>\n<circle data-fx=\"dome3\" class=\"fx dome\" cx=\"963\" cy=\"541\" r=\"33\" fill=\"url(#glow)\"/>\n<circle data-fx=\"dome4\" class=\"fx dome\" cx=\"1087\" cy=\"541\" r=\"33\" fill=\"url(#glow)\"/>\n<g data-fx=\"beam\" class=\"fx\">\n <ellipse cx=\"840\" cy=\"245\" rx=\"175\" ry=\"150\" fill=\"url(#lensglow)\"/>\n <g class=\"rot\"><path d=\"M840 245 L-300 70 L-300 330 Z\" fill=\"url(#ray)\"/><path d=\"M840 245 L1980 90 L1980 380 Z\" fill=\"url(#ray)\"/></g>\n</g></svg>", "r3": "<svg class=\"fxl r3\" viewBox=\"0 0 1672 933\" aria-hidden=\"true\"><defs><image id=\"bg\" href=\"img/room3.jpg\" width=\"1672\" height=\"933\"/><radialGradient id=\"glow\"><stop offset=\"0\" stop-color=\"#fffbe0\"/><stop offset=\".4\" stop-color=\"#ffd35a\" stop-opacity=\".75\"/><stop offset=\"1\" stop-color=\"#ff9a1f\" stop-opacity=\"0\"/></radialGradient>\n<linearGradient id=\"down\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0\" stop-color=\"#050403\"/><stop offset=\"1\" stop-color=\"#1c130a\"/></linearGradient><clipPath id=\"cLid\"><rect x=\"449\" y=\"286\" width=\"123\" height=\"18\"/></clipPath><clipPath id=\"cBook\"><path d=\"M1204 566 L1246 527 H1416 L1414 570 Z\"/></clipPath><clipPath id=\"cCrate\"><rect x=\"516\" y=\"452\" width=\"131\" height=\"24\"/></clipPath><clipPath id=\"cHatch\"><path d=\"M556 704 H908 L962 857 H494 Z\"/></clipPath><clipPath id=\"cGlass\"><circle cx=\"1180\" cy=\"330\" r=\"168\"/></clipPath></defs>\n<g data-fx=\"tool\" class=\"fx\"><path d=\"M450 303 H571 V292 H450Z\" fill=\"#0b0806\"/>\n <g class=\"lidup\"><path d=\"M450 288 H571 L563 250 H458 Z\" fill=\"#4b4438\" stroke=\"#8d806a\" stroke-width=\"3\"/></g>\n <g class=\"rise\"><circle class=\"twinkle\" cx=\"510\" cy=\"278\" r=\"70\" fill=\"url(#glow)\"/><path d=\"M462 292 L548 258 q18 -6 18 10\" fill=\"none\" stroke=\"#c0c6cc\" stroke-width=\"9\" stroke-linecap=\"round\"/></g></g>\n<g data-fx=\"lens\" class=\"fx\"><rect width=\"1672\" height=\"933\" fill=\"#000\" opacity=\".45\"/>\n <g class=\"glass\"><circle cx=\"1180\" cy=\"330\" r=\"178\" fill=\"#e9dbb2\"/>\n  <g clip-path=\"url(#cGlass)\"><path d=\"M1180 160 V500\" stroke=\"#b49d6c\" stroke-width=\"5\"/>\n   <g stroke=\"#9c8a63\" stroke-width=\"2\"><path d=\"M1010 250H1350M1000 295H1360M1000 340H1360M1010 385H1350M1030 430H1330\"/></g>\n   <text x=\"1180\" y=\"226\" font-size=\"30\" fill=\"#3a2a12\">세관 검사 장부</text><text class=\"blur\" x=\"1180\" y=\"332\" font-size=\"24\" fill=\"#3a2a12\">“정상 화물의 바코드는 …”</text></g>\n  <circle cx=\"1180\" cy=\"330\" r=\"178\" fill=\"none\" stroke=\"#c99b45\" stroke-width=\"20\"/><path d=\"M1306 456 L1385 535\" stroke=\"#6b4d1c\" stroke-width=\"30\" stroke-linecap=\"round\"/></g></g>\n<g data-fx=\"crate\" class=\"fx\"><path d=\"M519 456 H645 V476 H519Z\" fill=\"#070504\"/>\n <g stroke=\"#caa95c\" stroke-width=\"3\"><path d=\"M526 474l20 -26M544 474l-6 -30M566 474l24 -22M590 474l-14 -28M612 474l16 -30M634 474l-12 -22\"/></g>\n <g class=\"burst\"><circle cx=\"582\" cy=\"455\" r=\"90\" fill=\"url(#glow)\"/></g>\n <g class=\"lidpop\"><g clip-path=\"url(#cCrate)\"><use href=\"#bg\"/></g><path d=\"M516 452H647V476H516Z\" fill=\"none\" stroke=\"#c9ab7a\" stroke-width=\"2\"/></g>\n <g class=\"got\"><g class=\"rise\"><g transform=\"translate(548 392) scale(.5)\"><g ><circle r=\"54\" fill=\"none\" stroke=\"#2c2724\" stroke-width=\"17\"/><circle r=\"54\" fill=\"none\" stroke=\"#a9774a\" stroke-width=\"7\"/>\n<path d=\"M-54 0H54M0 -54V54M-38 -38L38 38M38 -38L-38 38\" stroke=\"#8a6242\" stroke-width=\"9\"/><circle r=\"15\" fill=\"#d0a05c\" stroke=\"#2c2724\" stroke-width=\"4\"/></g></g><g transform=\"translate(618 372)\"><path d=\"M-16 -8h32v46h-32z\" fill=\"#8b2f22\" stroke=\"#e0a58a\" stroke-width=\"3\"/><path d=\"M0 -8v-16l22 -8\" stroke=\"#c9ced5\" stroke-width=\"6\" fill=\"none\"/></g></g></g></g>\n<g data-fx=\"oil\" class=\"fx\"><g clip-path=\"url(#cHatch)\"><path d=\"M556 704 H908 L962 857 H494 Z\" fill=\"#f2b44c\" opacity=\".12\"/><rect class=\"sheen\" x=\"360\" y=\"690\" width=\"90\" height=\"190\" fill=\"#ffe6a8\" opacity=\".55\" transform=\"skewX(-14)\"/></g>\n <g fill=\"#e2a93c\"><ellipse class=\"drip\" cx=\"545\" cy=\"718\" rx=\"9\" ry=\"14\"/><ellipse class=\"drip d2\" cx=\"920\" cy=\"745\" rx=\"9\" ry=\"14\"/><ellipse class=\"drip d3\" cx=\"730\" cy=\"716\" rx=\"9\" ry=\"14\"/></g></g>\n<g data-fx=\"valve\" class=\"fx\"><g transform=\"translate(732 778)\"><ellipse cx=\"0\" cy=\"12\" rx=\"62\" ry=\"22\" fill=\"#000\" opacity=\".5\"/><g class=\"drop\"><g transform=\"scale(1 .55)\"><g ><circle r=\"54\" fill=\"none\" stroke=\"#2c2724\" stroke-width=\"17\"/><circle r=\"54\" fill=\"none\" stroke=\"#a9774a\" stroke-width=\"7\"/>\n<path d=\"M-54 0H54M0 -54V54M-38 -38L38 38M38 -38L-38 38\" stroke=\"#8a6242\" stroke-width=\"9\"/><circle r=\"15\" fill=\"#d0a05c\" stroke=\"#2c2724\" stroke-width=\"4\"/></g></g></g></g></g>\n<g data-fx=\"open\" class=\"fx\">\n <g class=\"turn\"><g transform=\"translate(732 778) scale(1 .55)\"><g class=\"spin\"><circle r=\"54\" fill=\"none\" stroke=\"#2c2724\" stroke-width=\"17\"/><circle r=\"54\" fill=\"none\" stroke=\"#a9774a\" stroke-width=\"7\"/>\n<path d=\"M-54 0H54M0 -54V54M-38 -38L38 38M38 -38L-38 38\" stroke=\"#8a6242\" stroke-width=\"9\"/><circle r=\"15\" fill=\"#d0a05c\" stroke=\"#2c2724\" stroke-width=\"4\"/></g></g></g>\n <g class=\"hole\"><path d=\"M556 704 H908 L962 857 H494 Z\" fill=\"#0a0603\" stroke=\"#6b4630\" stroke-width=\"8\"/>\n  <ellipse cx=\"728\" cy=\"800\" rx=\"190\" ry=\"68\" fill=\"url(#glow)\" opacity=\".85\"/>\n  <g stroke=\"#b98a4e\" stroke-width=\"9\" stroke-linecap=\"round\"><path d=\"M668 712 L650 852M790 712 L808 852M664 742H794M660 772H798M656 804H802\"/></g></g>\n <g class=\"lift\"><g clip-path=\"url(#cHatch)\"><use href=\"#bg\"/></g><path d=\"M556 704 H908 L962 857 H494 Z\" fill=\"none\" stroke=\"#c08a5c\" stroke-width=\"3\"/></g>\n <path class=\"shaft\" d=\"M556 704 H908 L1050 250 H420 Z\" fill=\"url(#glow)\" opacity=\".38\"/></g>\n</svg>"};
+
+function fxActive(){
+  const on=new Set(Object.keys(S.flash||{}));
+  const add=(c,...ids)=>{if(c)ids.forEach(i=>on.add(i));};
+  const done=S.solving===S.room;
+  if(S.room==='r1'){
+    add(f.handle&&has('handle'),'lamp');add(f.drawer,'drawer');add(f.locker,'locker');add(f.frame,'frame');
+    add(f.padopen&&!done,'padopen');add(done,'open');
+  }
+  if(S.room==='r2'){
+    add(true,'card0','card2','card4');
+    add(!S.mount[1],'empty1');add(!S.mount[3],'empty3');add(S.mount[1],'card1');add(S.mount[3],'card3');
+    add(f.gloves,'box');add(f.fuse,'fuse');add(f.power,'lever','needle','num0','num1','num2','num3','num4');
+    add(done,'dome2','dome3','beam');
+  }
+  if(S.room==='r3'){
+    add(f.shelf,'tool');add(f.crate2,'crate');add(f.oiled&&!done,'oil');add(f.valved&&!done,'valve');add(done,'open');
+  }
+  return on;
+}
+function syncFx(){
+  const on=fxActive();
+  document.querySelectorAll('#scene .fxl [data-fx]').forEach(e=>e.classList.toggle('show',on.has(e.dataset.fx)));
+  const t=document.querySelectorAll('#scene .fxl [data-fx="padopen"] text');
+  t.forEach((e,i)=>e.textContent=S.dial[i]);
+}
+function flashFx(id,ms){
+  const state=S;S.flash=S.flash||{};clearTimeout(S.flash[id]);
+  S.flash[id]=setTimeout(()=>{if(state!==S||!S.flash)return;delete S.flash[id];syncFx();},ms);
+  syncFx();
+}
+
+function watch(ms,next){
+  const b=h('div','blocker');document.body.append(b);
+  $('#scene').scrollIntoView({block:'center'});
+  setTimeout(()=>{b.remove();next();},ms);
+}
+function celebrate(ms,next){S.solving=S.room;S.flash={};syncFx();watch(ms,next);}
+const BG={r1:"img/room1.jpg",r2:"img/room2.jpg",r3:"img/room3.jpg",v:"img/vault.jpg"};
+const COORDS={"r1":{"lamp":{"x":512,"y":378,"w":70,"h":178},"drawer":{"x":588,"y":598,"w":229,"h":59},"locker":{"x":948,"y":226,"w":164,"h":595},"frame":{"x":595,"y":107,"w":329,"h":284},"guard0":{"x":1114,"y":234,"w":208,"h":590},"guard1":{"x":1314,"y":262,"w":166,"h":562},"guard2":{"x":1468,"y":242,"w":200,"h":584},"ledger":{"x":644,"y":529,"w":147,"h":66},"pad":{"x":360,"y":368,"w":67,"h":75},"torch":{"x":470,"y":66,"w":78,"h":278},"window":{"x":1337,"y":0,"w":228,"h":345},"bread":{"x":457,"y":537,"w":114,"h":42}},"r2":{"vent":{"x":73,"y":5,"w":272,"h":142},"toolbox":{"x":1289,"y":480,"w":244,"h":195},"crack":{"x":1545,"y":478,"w":110,"h":110},"rail":{"x":0,"y":488,"w":324,"h":445},"fusebox":{"x":75,"y":190,"w":199,"h":239},"panel":{"x":533,"y":502,"w":622,"h":179},"gauge":{"x":559,"y":752,"w":154,"h":150},"lens":{"x":645,"y":0,"w":388,"h":492},"compass":{"x":1281,"y":640,"w":103,"h":74},"map":{"x":1286,"y":165,"w":241,"h":287},"sea":{"x":404,"y":278,"w":244,"h":194}},"r3":{"ledger":{"x":1200,"y":524,"w":222,"h":50},"shelf":{"x":404,"y":272,"w":214,"h":118},"crate1":{"x":376,"y":447,"w":139,"h":189},"crate2":{"x":516,"y":447,"w":131,"h":189},"crate3":{"x":652,"y":447,"w":129,"h":189},"crate4":{"x":785,"y":447,"w":131,"h":189},"crate5":{"x":917,"y":447,"w":143,"h":189},"hatch":{"x":492,"y":697,"w":476,"h":168},"nets":{"x":22,"y":66,"w":320,"h":280},"forklift":{"x":30,"y":294,"w":332,"h":314},"boat":{"x":1398,"y":396,"w":126,"h":40},"barrel":{"x":1526,"y":366,"w":146,"h":304},"window":{"x":676,"y":56,"w":166,"h":150}},"v":{"ring":{"x":545,"y":47,"w":607,"h":644},"keypad":{"x":755,"y":272,"w":186,"h":179},"parchA":{"x":540,"y":763,"w":291,"h":130},"parchB":{"x":843,"y":757,"w":274,"h":132},"portrait":{"x":1297,"y":22,"w":256,"h":308},"cookiebox":{"x":1261,"y":638,"w":300,"h":242},"sextant":{"x":132,"y":527,"w":206,"h":190},"spyglass":{"x":90,"y":466,"w":229,"h":60}}};
+const SW=1672,SH=933;
+let S,f;
+const $=s=>document.querySelector(s);
+function h(t,c,x){const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e;}
+function newState(){
+  S={room:'r1',inv:[],sel:null,mist:{r1:0,r2:0,r3:0,v:0},hints:{r1:0,r2:0,r3:0,v:0},t0:{},t1:{},ans:{},said:{},dial:[9,2],sw:[false,false,false,false,false],mount:[true,false,true,false,true],started:Date.now()};
+  f={};
+}
+function say(msg,cls){const e=$('#say');e.textContent=msg;e.className='say'+(cls?' '+cls:'');}
+function miss(){S.mist[S.room]++;renderSide();if(S.mist[S.room]%3===0)giveHint(true);}
+function has(id){return S.inv.includes(id);}
+function give(id){
+  if(S.inv.length>=6){say('가방이 가득 찼다.','bad');return false;}
+  S.inv.push(id);
+  if(has('noteL')&&has('noteR')){
+    S.inv=S.inv.filter(x=>x!=='noteL'&&x!=='noteR');S.inv.push('note');
+    setTimeout(()=>{say('두 조각을 맞추자 글이 이어진다. 가방에서 쪽지를 눌러 읽어 보자.');flashFx('note',5000);},0);
+  }
+  renderBag();return true;
+}
+function take(id){S.inv=S.inv.filter(x=>x!==id);if(S.sel===id)S.sel=null;renderBag();}
+function renderBag(){
+  const b=$('#bag');b.textContent='';
+  for(let i=0;i<6;i++){
+    const id=S.inv[i];
+    const s=h('button','slot'+(id?'':' empty')+(id&&S.sel===id?' sel':''));
+    if(id){
+      s.append(h('span','',ITEMS[id].i),h('small','',ITEMS[id].n));
+      s.onclick=()=>{S.sel=S.sel===id?null:id;say(ITEMS[id].d);renderBag();};
+    }
+    b.append(s);
+  }
+}
+function modal(build){
+  const ov=h('div','ov'),p=h('div','pn');ov.append(p);document.body.append(ov);
+  const close=()=>ov.remove();
+  ov.addEventListener('mousedown',e=>{if(e.target===ov)close();});
+  build(p,close);
+  return close;
+}
+function story(title,lines,btn,next){
+  modal((p,close)=>{
+    p.append(h('h3','',title));
+    lines.forEach(l=>p.append(h('p','',l)));
+    const b=h('button','btn gold',btn);b.onclick=()=>{close();if(next)next();};
+    const r=h('div','row');r.append(b);p.append(r);
+  });
+}
+function renderNotes(){
+  const n=$('#notes');n.textContent='';n.append(h('h4','','기록'));
+  const rows=[];
+  if(S.room==='r1'){
+    Object.keys(S.said).forEach(k=>rows.push('경비 '+k+': “'+S.said[k]+'”'));
+  }
+  if(S.room==='r3'&&f.seen){
+    Object.keys(f.seen).sort().forEach(k=>rows.push('상자 '+k+' ('+CRATES[k-1].l+'): '+CRATES[k-1].b));
+  }
+  if(!rows.length)n.append(h('p','mut','아직 없음'));
+  rows.forEach(r=>n.append(h('p','',r)));
+}
+function renderSide(){
+  const s=$('#side');s.textContent='';
+  s.append(h('h4','','이 방의 기록'));
+  s.append(h('p','','틀린 시도: '+S.mist[S.room]+'회'));
+  s.append(h('p','','힌트 사용: '+S.hints[S.room]+'회'));
+}
+function renderRoom(){
+  const R=ROOMS[S.room];
+  $('#place').textContent=R.title;
+  $('#goal').textContent='목표: '+R.goal;
+  const sc=$('#scene');sc.textContent='';
+  const img=h('img');img.src=BG[S.room];img.alt='';img.draggable=false;sc.append(img);
+  if(FX[S.room])sc.insertAdjacentHTML('beforeend',FX[S.room]);
+  const C=COORDS[S.room];
+  const area=x=>C[x.id].w*C[x.id].h;
+  const order=R.hot.slice().sort((a,b)=>area(b)-area(a));
+  if(S.room==='r1'){const wi=order.findIndex(x=>x.id==='window');order.unshift(order.splice(wi,1)[0]);}
+  order.forEach(x=>{
+    const c=C[x.id];
+    const t=h('button','hot');t.dataset.id=x.id;t.setAttribute('aria-label',x.n);
+    t.style.left=(c.x/SW*100)+'%';t.style.top=(c.y/SH*100)+'%';t.style.width=(c.w/SW*100)+'%';t.style.height=(c.h/SH*100)+'%';
+    t.onclick=()=>{x.fn();syncFx();};
+    sc.append(t);
+  });
+
+  $('#hintTxt').textContent='';
+  renderBag();renderNotes();renderSide();syncFx();
+}
+function startRoom(id,carry){
+  S.room=id;S.inv=(carry||[]).slice();S.sel=null;S.solving=null;S.flash={};S.t0[id]=Date.now();
+  const R=ROOMS[id];
+  renderRoom();
+  say(R.sayStart||'둘러보자.');
+  story(R.introTitle,R.intro,R.introBtn,()=>{if(R.onEnter)R.onEnter();});
+}
+function giveHint(auto){
+  const R=ROOMS[S.room],second=!!(R.after&&f.open);
+  const list=second?R.after:R.hints,lv=second?(f.hint2||0):(f['hint_'+S.room]||0);
+  if(lv>=list.length){if(!auto)$('#hintTxt').textContent='더 줄 힌트가 없다.';return;}
+  $('#hintTxt').textContent=(auto?'(자꾸 막히니 힌트를 준다) ':'')+'힌트 '+(lv+1)+': '+list[lv];
+  if(second)f.hint2=lv+1;else f['hint_'+S.room]=lv+1;
+  S.hints[S.room]++;renderSide();
+}
+$('#hintBtn').onclick=()=>giveHint(false);
+
+function numRow(p,labels,btnText,onSubmit,extra){
+  const row=h('div','row');const inputs=labels.map(l=>{
+    const w=h('label','mut',l+' ');const i=h('input');i.type='text';i.inputMode='numeric';i.maxLength=extra&&extra.max||6;w.append(i);row.append(w);return i;
+  });
+  const b=h('button','btn gold',btnText);b.onclick=()=>onSubmit(inputs.map(i=>i.value.trim()));row.append(b);p.append(row);
+  return inputs;
+}
+
+const LOCKS={
+  door:{img:'img/lock_door.jpg',view:[230,30,1300,950],y:[296,694],x:[[410,815],[944,1350]]},
+  hatch:{img:'img/lock_hatch.jpg',view:[0,0,1536,1024],y:[314,740],x:[[276,722],[784,1228]]},
+  box:{img:'img/lock_box.jpg',view:[0,320,1536,704],y:[562,788],x:[[186,348],[384,548],[585,752],[786,952],[986,1153],[1188,1350]]}
+};
+function lockWidget(name,val){
+  const L=LOCKS[name],NS='http://www.w3.org/2000/svg';
+  const el=(t,a)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e;};
+  const box=h('div','lock');box.dataset.lock=name;
+  const svg=el('svg',{viewBox:L.view.join(' ')});svg.append(el('image',{href:L.img,width:1536,height:1024}));
+  const texts=[];let locked=false;
+  const turn=(i,d)=>{
+    if(locked)return;val[i]=(val[i]+d+10)%10;const t=texts[i];t.textContent=val[i];box.classList.remove('shake');
+    t.classList.remove('roll');t.style.setProperty('--from',(d*60)+'px');t.getBoundingClientRect();t.classList.add('roll');
+  };
+  L.x.forEach(([x1,x2],i)=>{
+    const [y1,y2]=L.y,cx=(x1+x2)/2,cy=(y1+y2)/2,w=x2-x1,ht=y2-y1;
+    const t=el('text',{x:cx,y:cy,class:'digit','font-size':Math.min(ht*.5,w*.9)});t.textContent=val[i];texts.push(t);svg.append(t);
+    [[1,y1],[-1,cy]].forEach(([d,top])=>{
+      const z=el('g',{class:'wheel',role:'button',tabindex:0,'data-i':i,'data-d':d,'aria-label':(i+1)+'번째 칸 '+(d>0?'올리기':'내리기')});
+      const a=Math.min(w*.16,26),ay=d>0?y1+a*1.1:y2-a*1.1;
+      z.append(el('rect',{x:x1,y:top,width:w,height:ht/2,class:'zone'}),el('path',{class:'arrow',d:'M'+(cx-a)+' '+(ay+d*a*.45)+'L'+cx+' '+(ay-d*a*.45)+'L'+(cx+a)+' '+(ay+d*a*.45)+'Z'}));
+      z.addEventListener('click',()=>turn(i,d));
+      z.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();turn(i,d);}});
+      svg.append(z);
+    });
+  });
+  box.append(svg);
+  return {el:box,
+    value:()=>val.join(''),
+    set(v){[...v].forEach((c,i)=>{val[i]=+c;texts[i].textContent=c;});box.classList.remove('shake');},
+    shake(){box.classList.remove('shake');void box.offsetWidth;box.classList.add('shake');},
+    win(){locked=true;box.classList.add('won');}
+  };
+}
+
+function travel(from,to,origin,caption,next){
+  const d=h('div','travel');
+  const a=h('img','from');a.src=BG[from];a.alt='';a.style.transformOrigin=(origin[0]/SW*100)+'% '+(origin[1]/SH*100)+'%';
+  const b=h('img','to');b.src=BG[to];b.alt='';
+  d.append(a,b,h('p','',caption),h('small','','누르면 건너뛴다'));document.body.append(d);
+  let gone=false;const go=()=>{if(gone)return;gone=true;d.remove();next();};
+  setTimeout(go,4300);setTimeout(()=>d.addEventListener('click',go),500);
+}
+
+const GUARDS={갑:'을은 거짓말쟁이야. 자물쇠는 내 근무 기록대로 돌려놓았지.',을:'병은 거짓말을 하지 않아. 나는 일지대로 했을 뿐이야.',병:'갑과 나는 둘 다 거짓말쟁이야.'};
+
+const BUBBLE={갑:{x:1195,y:345},을:{x:1385,y:625},병:{x:1530,y:475}};
+const bubbleTimer={};
+function showBubble(nm){
+  const sc=$('#scene'),key='bubble'+nm;
+  const old=sc.querySelector('[data-bubble="'+nm+'"]');if(old)old.remove();
+  clearTimeout(bubbleTimer[key]);
+  const b=h('div','bubble');b.dataset.bubble=nm;
+  b.append(h('b','','경비 '+nm),h('span','',GUARDS[nm]));
+  b.style.left=(BUBBLE[nm].x/SW*100)+'%';b.style.top=(BUBBLE[nm].y/SH*100)+'%';
+  sc.append(b);
+  bubbleTimer[key]=setTimeout(()=>b.remove(),5000);
+}
+function guardHot(nm){return {g:1,id:'guard'+['갑','을','병'].indexOf(nm),i:'🧍',n:'경비 '+nm,fn(){S.said[nm]=GUARDS[nm];renderNotes();showBubble(nm);}};}
+function dialPop(){
+  modal((p,close)=>{
+    p.classList.add('lockpn');
+    p.append(h('h3','','문 자물쇠'),h('p','mut','두 다이얼은 같은 칸 수만큼 돌아가 있다. 칸의 위나 아래를 눌러 돌린다.'));
+    const lock=lockWidget('door',S.dial),msg=h('p','','');let done=false;
+    const pull=h('button','btn gold','자물쇠 당기기'),reset=h('button','btn','처음 번호로(92)'),x=h('button','btn','닫기');
+    reset.onclick=()=>{if(done)return;lock.set('92');msg.textContent='';syncFx();};
+    x.onclick=()=>{if(!done){close();syncFx();}};
+    pull.onclick=()=>{
+      if(done)return;
+      if(lock.value()==='58'){done=true;lock.win();msg.textContent='철컹. 자물쇠가 풀렸다.';msg.className='ok';S.ans.r1='58';watch(1100,()=>{close();solved1();});}
+      else{miss();lock.shake();msg.textContent='덜컥. 맞지 않는다.';msg.className='bad';}
+    };
+    const r=h('div','row');r.append(pull,reset,x);p.append(lock.el,r,msg);
+  });
+}
+function solved1(){
+  S.t1.r1=Date.now();
+  celebrate(3000,()=>story('문이 열렸다',['철컹. 육중한 나무 문이 열린다.','문 너머로 좁은 돌계단이 등대 위쪽으로 이어진다.','챙겨 온 손전등을 주머니에 넣었다.'],'계단을 오른다',()=>travel('r1','r2',[190,470],'계단을 올라 등대 꼭대기로',()=>startRoom('r2',['flash']))));
+}
+function ledgerPop(){
+  modal((p,close)=>{
+    p.append(h('h3','','경비 근무 일지'));
+    const t=h('table');t.innerHTML='<tr><th>이름</th><th>근무 일수</th><th>벌점</th></tr><tr><td>갑</td><td>10일</td><td>2점</td></tr><tr><td>을</td><td>8일</td><td>1점</td></tr><tr><td>병</td><td>5일</td><td>3점</td></tr>';
+    p.append(t,h('p','mut','일지에는 이 표뿐이다. 자물쇠와 관련된 말은 없다.'));
+    const b=h('button','btn','닫기');b.onclick=close;const r=h('div','row');r.append(b);p.append(r);
+  });
+}
+
+const CARDS=[
+  '꼭지각의 크기가 40°인 이등변삼각형의 한 밑각의 크기는 80°이다.',
+  '땅에서 6 m 높이에서 부러진 나무의 끝이 밑동에서 8 m 떨어진 땅에 닿았다. 부러지기 전의 높이는 14 m이다.',
+  '중선 AD의 길이가 12인 △ABC의 무게중심을 G라 하면 AG = 8이다.',
+  '티셔츠 5벌과 바지 3벌 중에서 하나씩 골라 입는 방법은 15가지이다.',
+  '서로 다른 주사위 두 개를 동시에 던질 때, 서로 다른 눈이 나올 확률은 1/6이다.'
+];
+const FIGS=["<svg viewBox=\"0 0 300 260\" role=\"img\" aria-label=\"꼭지각이 40도인 이등변삼각형\"><path d=\"M150 20 L70 240 H230 Z\" stroke=\"#111\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path d=\"M101 127 L119 133 M181 133 L199 127\" stroke=\"#111\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path d=\"M137.7 53.8 A36 36 0 0 0 162.3 53.8\" stroke=\"#111\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><text x=\"150\" y=\"84\" font-size=\"20\" text-anchor=\"middle\">40°</text></svg>", "<svg viewBox=\"0 0 320 250\" role=\"img\" aria-label=\"6미터 높이에서 부러져 끝이 밑동에서 8미터 떨어진 땅에 닿은 나무\"><path d=\"M16 210 H304\" stroke=\"#111\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><circle cx=\"196\" cy=\"148\" r=\"17\" fill=\"#7cb668\" stroke=\"#2f6b34\" stroke-width=\"1.5\"/><circle cx=\"216\" cy=\"157\" r=\"21\" fill=\"#6aa85a\" stroke=\"#2f6b34\" stroke-width=\"1.5\"/><circle cx=\"233\" cy=\"176\" r=\"20\" fill=\"#8cc477\" stroke=\"#2f6b34\" stroke-width=\"1.5\"/><circle cx=\"248\" cy=\"167\" r=\"15\" fill=\"#7cb668\" stroke=\"#2f6b34\" stroke-width=\"1.5\"/><circle cx=\"222\" cy=\"186\" r=\"17\" fill=\"#6aa85a\" stroke=\"#2f6b34\" stroke-width=\"1.5\"/><circle cx=\"246\" cy=\"192\" r=\"17\" fill=\"#8cc477\" stroke=\"#2f6b34\" stroke-width=\"1.5\"/><circle cx=\"207\" cy=\"172\" r=\"16\" fill=\"#7cb668\" stroke=\"#2f6b34\" stroke-width=\"1.5\"/><circle cx=\"262\" cy=\"189\" r=\"13\" fill=\"#6aa85a\" stroke=\"#2f6b34\" stroke-width=\"1.5\"/><circle cx=\"238\" cy=\"150\" r=\"13\" fill=\"#8cc477\" stroke=\"#2f6b34\" stroke-width=\"1.5\"/><path d=\"M70 60 L270 210\" stroke=\"#8a5a2b\" stroke-width=\"9\" stroke-linecap=\"round\"/><path d=\"M63 210 L66 62 L70 54 L72 63 L76 57 L74 70 L78 210 Z\" fill=\"#8a5a2b\"/><path d=\"M200 157 l28 -2 M232 181 l4 22 M184 146 l2 -22\" stroke=\"#8a5a2b\" stroke-width=\"4\" stroke-linecap=\"round\"/><path d=\"M79 196 H93 V210\" stroke=\"#111\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><text x=\"36\" y=\"140\" font-size=\"20\" text-anchor=\"middle\">6 m</text><text x=\"170\" y=\"238\" font-size=\"20\" text-anchor=\"middle\">8 m</text></svg>", "<svg viewBox=\"60 40 610 500\" role=\"img\" aria-label=\"삼각형 ABC의 중선 AD와 무게중심 G\"><path d=\"M300 90 L110 480 H620 Z M300 90 L365 480\" stroke=\"#111\" stroke-width=\"4\" fill=\"none\" stroke-linejoin=\"round\"/><circle cx=\"343.3\" cy=\"350\" r=\"7\"/><circle cx=\"365\" cy=\"480\" r=\"7\"/><g font-size=\"38\" font-style=\"italic\" font-family=\"serif\" text-anchor=\"middle\"><text x=\"300\" y=\"72\">A</text><text x=\"86\" y=\"498\">B</text><text x=\"648\" y=\"498\">C</text><text x=\"365\" y=\"526\">D</text><text x=\"373\" y=\"358\">G</text></g></svg>"];
+function figPop(i){
+  modal((p,close)=>{
+    const box=h('div','figbig');box.innerHTML=FIGS[i];
+    const b=h('button','btn','닫기');b.onclick=close;const r=h('div','row');r.append(b);
+    p.append(h('p','',CARDS[i]),box,r);
+  });
+}
+const TRUTH=[false,false,true,true,false];
+function panelPop(){
+  modal((p,close)=>{
+    p.append(h('h3','','제어판'));
+    const missing=S.mount.map((m,i)=>m?null:(i+1)+'번').filter(Boolean);
+    const ready=!missing.length;
+    p.append(h('p','mut',ready?'참인 문장을 눌러 등불을 켜라.':missing.join(', ')+' 카드 자리가 비어 있다.'));
+    const msg=h('p','','');
+    CARDS.forEach((c,i)=>{
+      const row=h('div','cardrow');
+      const t=h('button','card',S.mount[i]?c:'('+(i+1)+'번 카드 자리)');
+      const lamp=h('div','lamp');
+      const paint=()=>{t.classList.toggle('on',S.sw[i]);lamp.classList.toggle('on',S.sw[i]);t.setAttribute('aria-pressed',S.sw[i]);};
+      t.disabled=!ready;
+      t.onclick=()=>{S.sw[i]=!S.sw[i];paint();msg.textContent='';};
+      paint();
+      if(S.mount[i]&&FIGS[i]){const g=h('button','fig');g.innerHTML=FIGS[i];g.setAttribute('aria-label',(i+1)+'번 그림 크게 보기');g.onclick=()=>figPop(i);row.append(g);}
+      else t.classList.add('wide');
+      row.append(t,lamp);p.append(row);
+    });
+    const on=h('button','btn gold','전원 올리기');on.disabled=!ready;
+    on.onclick=()=>{
+      if(!S.sw.every((x,i)=>x===TRUTH[i])){miss();msg.textContent='파직. 전류가 흐르지 않는다.';msg.className='bad';return;}
+      close();S.ans.r2='6';solved2();
+    };
+    const b=h('button','btn','닫기');b.onclick=close;
+    const r=h('div','row');r.append(on,b);p.append(r,msg);
+  });
+}
+function solved2(){
+  S.t1.r2=Date.now();
+  celebrate(3600,()=>story('등불이 켜졌다',['등불이 차례로 켜지고, 거대한 렌즈가 돌기 시작한다.','빛줄기가 폭풍 너머 부두의 낡은 창고를 비춘다.','돋보기를 챙겨 부두로 내려간다.'],'부두로 내려간다',()=>travel('r2','r3',[840,245],'빛줄기를 따라 부두 창고로',()=>startRoom('r3',['lens']))));
+}
+
+const CRATES=[
+  {l:'귤',b:'40128375'},{l:'소금',b:'58301770'},{l:'그물',b:'27465196'},{l:'미역',b:'35241744'},{l:'전복',b:'73510826'}
+];
+function crateHot(n){
+  const c=CRATES[n-1];
+  return {id:'crate'+n,i:'📦',n:'상자 '+n+' ('+c.l+')',fn(){
+    f.seen=f.seen||{};f.seen[n]=1;renderNotes();
+    if(S.sel==='crowbar'){
+      if(n!==2){miss();say('세관 봉인 표식이 붙어 있다. 가짜라는 근거 없이 함부로 뜯을 수 없다.','bad');return;}
+      if(f.crate2){say('이미 열었다. 안은 비었다.');return;}
+      f.crate2=1;give('valve');give('oil');say('쇠지렛대로 못을 뽑자 상자가 열렸다. 짚더미 속에서 밸브 핸들과 윤활유가 나왔다.');return;
+    }
+    say('상자 '+n+' ('+c.l+') 바코드: '+c.b);
+  }};
+}
+function ledger3(){
+  if(S.sel!=='lens'){say('장부가 빗물에 번져 글씨를 읽을 수 없다.');return;}
+  flashFx('lens',2100);
+  watch(2100,()=>modal((p,close)=>{
+    p.append(h('h3','','세관 검사 장부'));
+    p.append(h('p','','“정상 화물은 8자리 바코드에 왼쪽부터 3, 1, 3, 1, 3, 1, 3, 1을 차례로 곱해 모두 더한 값이 10의 배수다. 맨 끝 자리는 앞 일곱 자리가 정하는 검증 숫자다. 등대지기가 섞어 둔 가짜 상자는 이 규칙을 어긴다.”'));
+    const b=h('button','btn','닫기');b.onclick=close;const r=h('div','row');r.append(b);p.append(r);
+  }));
+}
+function hatchPop(){
+  if(S.sel==='oil'&&!f.oiled){f.oiled=1;take('oil');say(f.valved?'굳은 경첩에 기름을 발랐다. 이제 해치를 돌려 볼 수 있다.':'굳은 경첩에 기름을 발랐다. 그래도 돌릴 손잡이가 없다.');return;}
+  if(S.sel==='valve'&&!f.valved){f.valved=1;take('valve');say(f.oiled?'핸들을 끼웠다. 이제 해치를 돌려 볼 수 있다.':'핸들을 끼웠지만 경첩이 굳어 꿈쩍도 하지 않는다.');return;}
+  if(!f.oiled||!f.valved){say('바닥에 철제 해치가 있다. '+(f.valved?'경첩이 굳어 있다.':f.oiled?'돌릴 손잡이가 없다.':'손잡이가 없고 경첩이 굳어 있다.'));return;}
+  f.hatchDial=f.hatchDial||[0,0];
+  modal((p,close)=>{
+    p.classList.add('lockpn');
+    p.append(h('h3','','철제 해치'),h('p','mut','앞 칸은 가짜 상자의 번호, 뒤 칸은 그 상자가 지녀야 할 올바른 검증 숫자다.'));
+    const lock=lockWidget('hatch',f.hatchDial),msg=h('p','','');let done=false;
+    const go=h('button','btn gold','밸브 돌리기'),x=h('button','btn','닫기');
+    x.onclick=()=>{if(!done)close();};
+    go.onclick=()=>{
+      if(done)return;
+      if(lock.value()==='27'){done=true;lock.win();msg.textContent='끼익. 해치가 풀렸다.';msg.className='ok';S.ans.r3='27';watch(1100,()=>{close();solved3();});}
+      else{miss();lock.shake();msg.textContent='밸브가 꿈쩍도 하지 않는다.';msg.className='bad';}
+    };
+    const r=h('div','row');r.append(go,x);p.append(lock.el,r,msg);
+  });
+}
+function solved3(){
+  S.t1.r3=Date.now();
+  celebrate(4200,()=>story('해치가 열렸다',['해치 아래로 오래된 사다리가 이어진다.','사다리 끝에는 등대지기의 작은 방이 있다. 무쇠 금고가 웅크리고 있다.'],'내려간다',()=>travel('r3','v',[728,800],'사다리를 타고 등대지기의 방으로',()=>startRoom('v',[]))));
+}
+
+const GIVEN=[8,1,0, 0,5,0, 0,0,0];
+const LINES=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+function ringLayer(spin){
+  const sc=$('#scene'),old=sc.querySelector('.rings');if(old)old.remove();
+  const NS='http://www.w3.org/2000/svg',v=document.createElementNS(NS,'svg');
+  v.setAttribute('viewBox','0 0 '+SW+' '+SH);v.setAttribute('class','rings'+(spin?' spin':''));
+  [298,232,176].forEach((r,i)=>{
+    const c=document.createElementNS(NS,'circle');
+    c.setAttribute('cx',849);c.setAttribute('cy',365);c.setAttribute('r',r);c.setAttribute('stroke-dasharray',['150 40','95 34','60 30'][i]);
+    if(!spin)c.style.animationDelay=(0.5+i*0.7)+'s';
+    v.append(c);
+  });
+  sc.append(v);
+}
+function magicPop(){
+  if(f.open){say('금고는 이미 열렸다.');return;}
+  f.board=f.board||GIVEN.slice();
+  modal((p,close)=>{
+    p.append(h('h3','','금고 문의 숫자판'),h('p','','1부터 9까지의 수를 한 번씩 써서, 가로·세로·대각선의 합이 모두 같게 만들어라.'));
+    const grid=h('div','magic'),tiles=h('div','tiles'),msg=h('p','','');
+    let pick=0,done=false;
+    const draw=()=>{
+      const b=f.board;
+
+      const good=LINES.filter(l=>l.every(i=>b[i])&&b[l[0]]+b[l[1]]+b[l[2]]===15),won=good.length===LINES.length;
+      grid.textContent='';
+      b.forEach((v,i)=>{
+        const c=h('button','cell'+(GIVEN[i]?' fixed':'')+(won?' line':''),v?String(v):'');
+        c.dataset.i=i;c.setAttribute('aria-label',(Math.floor(i/3)+1)+'행 '+(i%3+1)+'열 '+(v||'빈칸'));
+        c.onclick=()=>place(i);grid.append(c);
+      });
+      const NS='http://www.w3.org/2000/svg',v=document.createElementNS(NS,'svg');v.setAttribute('viewBox','0 0 244 244');
+      if(!won)good.forEach(l=>{
+        const at=i=>[38+(i%3)*84,38+Math.floor(i/3)*84],[x1,y1]=at(l[0]),[x2,y2]=at(l[2]),ex=Math.sign(x2-x1)*30,ey=Math.sign(y2-y1)*30;
+        const ln=document.createElementNS(NS,'line');[['x1',x1-ex],['y1',y1-ey],['x2',x2+ex],['y2',y2+ey]].forEach(([k,n])=>ln.setAttribute(k,n));v.append(ln);
+      });
+      grid.append(v);
+      tiles.textContent='';
+      for(let n=1;n<=9;n++){
+        if(b.includes(n))continue;
+        const t=h('button','tile'+(pick===n?' sel':''),String(n));
+        t.onclick=()=>{pick=pick===n?0:n;draw();};tiles.append(t);
+      }
+    };
+    const place=i=>{
+      if(done||GIVEN[i])return;
+      const b=f.board;msg.textContent='';
+      if(pick){b[i]=pick;pick=0;}
+      else if(b[i])b[i]=0;
+      else{msg.textContent='아래에서 숫자 조각을 먼저 고르자.';return;}
+      draw();
+      if(!b.every(Boolean))return;
+      if(LINES.every(l=>b[l[0]]+b[l[1]]+b[l[2]]===15)){
+        done=true;f.open=1;msg.textContent='찰칵. 모든 줄에 불이 들어왔다.';msg.className='ok';
+        setTimeout(()=>{close();ringLayer(true);say('금고의 링이 돌기 시작한다.');watch(4600,()=>say('금고 문이 열렸다. 안에 양피지 두 장과 잠긴 상자가 있다.'));setTimeout(()=>{if(S.room==='v'&&f.open)openSafe();},2400);},1500);
+      }else{miss();msg.textContent='링이 덜컹거리다 멈춘다. 놓은 수를 누르면 뺄 수 있다.';msg.className='bad';}
+    };
+    draw();
+    const x=h('button','btn','닫기');x.onclick=close;const r=h('div','row');r.append(x);
+    p.append(grid,tiles,msg,r);
+  });
+}
+
+const BASEBALL=[
+  {name:'첫째 양피지',rows:[['235','1볼'],['987','1스트라이크'],['895','아웃'],['479','1스트라이크 1볼']]},
+  {name:'둘째 양피지',rows:[['635','2스트라이크'],['861','2볼'],['714','아웃'],['189','1볼']]}
+];
+const BOX_CODE='427638';
+const SAFE_HOT={inA:{x:640,y:215,w:205,h:165,n:'첫째 양피지'},inB:{x:862,y:215,w:205,h:165,n:'둘째 양피지'},box:{x:715,y:420,w:270,h:165,n:'잠긴 상자'}};
+function parchPop(i){
+  const B=BASEBALL[i];
+  modal((p,close)=>{
+    p.append(h('h3','',B.name),h('p','','1부터 9까지의 숫자 중 서로 다른 세 개로 된 암호를 찾아라.'),
+      h('p','mut','스트라이크: 숫자와 자리가 모두 맞음 · 볼: 숫자는 있지만 자리가 다름 · 아웃: 맞는 숫자가 없음'));
+    const t=h('table','baseball');
+    t.innerHTML='<tr><th>시도</th><th>결과</th></tr>'+B.rows.map(r=>'<tr><td>'+r[0]+'</td><td>'+r[1]+'</td></tr>').join('');
+    const b=h('button','btn','닫기');b.onclick=close;const r=h('div','row');r.append(b);p.append(t,r);
+  });
+}
+function boxPop(){
+  if(f.done){say('상자는 이미 열렸다.');return;}
+  f.boxDial=f.boxDial||[0,0,0,0,0,0];
+  modal((p,close)=>{
+    p.classList.add('lockpn');
+    p.append(h('h3','','잠긴 상자'),h('p','mut','첫째 양피지의 암호 뒤에 둘째 양피지의 암호를 이어 맞춰라.'));
+    const lock=lockWidget('box',f.boxDial),msg=h('p','','');
+    const go=h('button','btn gold','상자 열기'),x=h('button','btn','닫기');
+    x.onclick=()=>{if(!f.done)close();};
+    go.onclick=()=>{
+      if(f.done)return;
+      if(lock.value()===BOX_CODE){f.done=1;lock.win();msg.textContent='찰칵. 뚜껑이 열렸다.';msg.className='ok';watch(1500,()=>{close();finish();});}
+      else{miss();lock.shake();msg.textContent='덜컥. 상자는 열리지 않는다.';msg.className='bad';}
+    };
+    const r=h('div','row');r.append(go,x);p.append(lock.el,r,msg);
+  });
+}
+function openSafe(){
+  const sc=$('#scene');
+  sc.querySelectorAll('.rings,.hot[data-id="ring"]').forEach(e=>e.remove());
+  const paper=(x,id,sx,label)=>'<g transform="translate('+x+' 232) rotate('+(id==='cpA'?-3:3)+')"><svg width="190" height="132" viewBox="'+sx+' 762 280 126" preserveAspectRatio="none"><image href="img/vault.jpg" width="1672" height="933" clip-path="url(#'+id+')"/></svg><text x="95" y="76" font-size="24" fill="#4a2f10">'+label+'</text></g>';
+  sc.insertAdjacentHTML('beforeend',
+    '<svg class="safe" viewBox="0 0 1672 933" aria-hidden="true"><defs>'+
+    '<clipPath id="cpA"><path d="M590 771 L809 769 L825 878 L548 880 Z"/></clipPath><clipPath id="cpB"><path d="M848 767 L1056 763 L1091 880 L853 882 Z"/></clipPath>'+
+    '<clipPath id="cDoorRound"><circle cx="849" cy="365" r="333"/></clipPath>'+
+    '<radialGradient id="safeGlow" cx=".5" cy=".45" r=".6"><stop offset="0" stop-color="#6b4a1f"/><stop offset=".65" stop-color="#2a1b0c"/><stop offset="1" stop-color="#0b0704"/></radialGradient></defs>'+
+    '<g class="inside"><circle cx="849" cy="365" r="330" fill="url(#safeGlow)" stroke="#6d5130" stroke-width="16"/>'+
+    '<path d="M566 392 H1132 L1112 414 H586 Z" fill="#6b4b2a"/><path d="M590 590 H1108 L1086 612 H612 Z" fill="#6b4b2a"/></g>'+
+    '<g class="goods">'+paper(646,'cpA',546,'첫째 양피지')+paper(868,'cpB',846,'둘째 양피지')+
+    '<g><path d="M735 470 L765 438 H935 L965 470 Z" fill="#8a5a2b" stroke="#2d1c0c" stroke-width="4"/><rect x="735" y="470" width="230" height="112" rx="8" fill="#6e4420" stroke="#2d1c0c" stroke-width="4"/>'+
+    '<rect x="765" y="498" width="170" height="54" rx="8" fill="#b9934c" stroke="#4e3813" stroke-width="3"/>'+
+    [0,1,2,3,4,5].map(k=>'<circle cx="'+(787+k*25)+'" cy="525" r="9" fill="#2a1c08"/>').join('')+'</g></g>'+
+    '<g class="door" clip-path="url(#cDoorRound)"><image href="img/vault.jpg" width="1672" height="933"/></g></svg>');
+  $('#goal').textContent='목표: 금고 속 상자를 열어라.';
+  const hots=[['inA',()=>parchPop(0)],['inB',()=>parchPop(1)],['box',boxPop]];
+  hots.forEach(([id,fn])=>{
+    const c=SAFE_HOT[id],t=h('button','hot');t.dataset.id=id;t.setAttribute('aria-label',c.n);
+    t.style.left=(c.x/SW*100)+'%';t.style.top=(c.y/SH*100)+'%';t.style.width=(c.w/SW*100)+'%';t.style.height=(c.h/SH*100)+'%';
+    t.onclick=fn;sc.append(t);
+  });
+
+}
+function finish(){
+  S.t1.v=Date.now();
+  const d=h('div','endscr');
+  const img=h('img');img.src='img/ending.jpg';img.alt='열린 등대 문 밖으로 아침 해가 떠오르고, 길 끝에 빵집이 있는 바닷가 마을이 보인다';
+  const letter=h('div','letter');
+  ['상자 안에는 편지 한 통이 들어 있다.',
+   '“여기까지 오다니, 거짓에 속지 않는 눈을 가졌군요. 등불은 이제 여러분의 것입니다.”',
+   '“쿠키는 그냥 맛있는 쿠키였답니다. 졸음은 바닷바람 탓이에요.”',
+   '— 등대지기, 바닷가 빵집 주인'].forEach(t=>letter.append(h('p','',t)));
+  const fold=h('button','btn','편지 접기');fold.onclick=()=>{const c=letter.classList.toggle('folded');fold.textContent=c?'편지 펴기':'편지 접기';};
+  const res=h('button','btn gold','결과 보기');res.onclick=showResult;
+  const again=h('button','btn','처음부터');again.onclick=()=>{location.reload();};
+  const r=h('div','row');r.append(fold,res,again);
+  d.append(img,h('h2','','탈출 성공'),letter,r);document.body.append(d);
+}
+function mm(a,b){return a&&b?Math.round((b-a)/1000)+'초':'-';}
+function showResult(){
+  modal((p,close)=>{
+    p.append(h('h3','','결과'));
+    const t=h('table');
+    t.innerHTML='<tr><th>방</th><th>걸린 시간</th><th>틀린 시도</th><th>힌트</th></tr>'+
+      [['r1','방1 경비실'],['r2','방2 제어판'],['r3','방3 창고'],['v','금고']].map(([k,n])=>'<tr><td>'+n+'</td><td>'+mm(S.t0[k],S.t1[k])+'</td><td>'+S.mist[k]+'</td><td>'+S.hints[k]+'</td></tr>').join('');
+    p.append(t);
+    const b=h('button','btn','닫기');b.onclick=close;const r=h('div','row');r.append(b);p.append(r);
+  });
+}
+
+const INTRO={title:'등대지기의 시험',lines:[
+  '체험학습 첫날, 바닷가 빵집 할머니가 쿠키 한 상자를 건넸다.',
+  '상자 바닥에는 쪽지가 붙어 있었다. “등불을 이을 눈을 가진 분을 찾습니다. 거짓을 가려내는 눈 말입니다.”',
+  '쿠키를 먹고 나니 졸음이 쏟아졌다.',
+  '차가운 돌바닥 위에서 눈을 떴다. 낡은 등대 안이다.'
+]};
+const ROOMS={
+  r1:{title:'방 1 · 입구 경비실',goal:'이곳을 빠져나갈 방법을 찾아라.',
+    introTitle:'입구 경비실',intro:['육중한 나무 문 안쪽에 섬사람 셋이 서 있다.','“시험을 시작하지.” 그 가운데 누군가 낮게 말했다.','문 옆 벽에 달린 황동 잠금장치는 누군가 돌려놓은 듯하다.'],introBtn:'주위를 둘러본다',
+    hints:['램프를 살펴보자. 서랍에는 손잡이가 없다. 그림틀 뒤와 사물함도 눈여겨보자.','쪽지의 규칙대로 세 경비의 말을 따져 진실한 사람을 찾아라. 병의 말부터 생각해 보자.','병은 거짓말쟁이, 병을 편든 을도 거짓말쟁이, 진실한 사람은 갑이다. 일지에서 갑의 근무 일수에서 을과 병의 벌점 합을 빼자.'],
+    hot:[
+      {i:'🏮',id:'lamp',n:'기름 램프',fn(){if(f.handle){say('램프가 따뜻하게 타고 있다.');return;}f.handle=1;give('handle');say('램프를 들어 올리자 받침 밑에서 작은 놋 손잡이가 나왔다.');}},
+      {i:'🗄️',id:'drawer',n:'책상 서랍',fn(){
+        if(f.drawer){say('서랍은 비어 있다.');return;}
+        if(S.sel==='handle'){f.drawer=1;take('handle');give('key');say('손잡이를 끼우고 당기자 서랍이 열렸다. 안에 낡은 열쇠가 있다.');}
+        else say('서랍에 손잡이가 없어서 열 수 없다.');}},
+      {i:'🚪',id:'locker',n:'철제 사물함',fn(){
+        if(f.locker){say('사물함은 비어 있다.');return;}
+        if(S.sel==='key'){f.locker=1;take('key');give('noteR');give('flash');say('열쇠가 맞았다. 안에 찢긴 쪽지 한 조각과 손전등이 있다. 위층에서 쓸 곳이 있을 것 같다.');}
+        else say('철제 사물함이 잠겨 있다. 열쇠 구멍이 보인다.');}},
+      {i:'🖼️',id:'frame',n:'폭풍 속 등대 그림',fn(){if(f.frame){say('등대 그림이다. 뒤쪽은 이미 살펴보았다.');return;}f.frame=1;give('noteL');say('그림틀 뒤에 접힌 종이가 끼워져 있다. 찢긴 쪽지의 한쪽이다.');}},
+      guardHot('갑'),guardHot('을'),guardHot('병'),
+      {i:'📒',id:'ledger',n:'책상 위 근무 일지',fn(){ledgerPop();}},
+      {i:'🔐',id:'pad',n:'문 옆 다이얼 자물쇠',fn(){
+        if(!has('note')){say('황동 덮개가 단단히 닫혀 있다. 덮개 가장자리에 새겨진 글: “규칙을 아는 자만 연다.”');return;}
+        if(!f.padopen){f.padopen=1;flashFx('pad',3200);}
+        watch(900,dialPop);}},
+      {i:'🔥',id:'torch',n:'타오르는 횃불',fn(){say('뜨거워서 손을 댈 수 없다.');}},
+      {i:'🌙',id:'window',n:'높은 창',fn(){say('창밖으로 달빛 아래 어두운 바다가 보인다. 창이 높고 좁아 나갈 수 없다.');}},
+      {i:'🍞',id:'bread',n:'식은 빵과 부스러기',fn(){say('책상 구석에 식은 빵과 쿠키 부스러기가 있다. 빵집 할머니의 쿠키와 같은 모양이다.');}}
+    ]},
+  r2:{title:'방 2 · 꼭대기 제어판',goal:'꺼진 등불을 다시 켜라.',
+    introTitle:'등대 꼭대기',intro:['꼭대기는 캄캄하다. 등불은 모두 꺼져 있고 제어판은 먹통이다.','방 1에서 챙겨 온 손전등이 손에 들려 있다.'],introBtn:'주위를 둘러본다',
+    hints:['먹통인 제어판은 전원부터 살려야 한다. 어두워서 안 보이는 곳이 있다.','카드 두 장이 창틀과 계단 난간에 있다. 가방에서 카드를 고른 뒤 제어판을 눌러 꽂자.','2번은 부러진 윗부분의 길이를 먼저 구하자. 그림을 누르면 크게 볼 수 있다. 참인 카드는 3번과 4번이다.'],
+    hot:[
+      {i:'🕳️',id:'vent',n:'천장 환기구',fn(){
+        if(f.vent){say('환기구는 이미 살펴보았다.');return;}
+        if(S.sel==='flash'){f.vent=1;take('flash');give('fuse');say('손전등으로 비추자 거미줄 사이에 낀 유리관 퓨즈가 보인다.');}
+        else say('너무 어두워서 안쪽이 보이지 않는다.');}},
+      {i:'🧰',id:'toolbox',n:'도구함',fn(){if(f.tool){say('도구함은 비어 있다.');return;}f.tool=1;give('gloves');give('lever');give('lens');say('도구함에서 절연 장갑, 황동 레버, 돋보기를 찾았다.');}},
+      {i:'🪟',id:'crack',n:'창틀 틈새',fn(){if(f.crack){say('더 나올 것이 없다.');return;}f.crack=1;give('card2');say('창틀 틈새에서 “2”라고 적힌 카드를 찾았다.');}},
+      {i:'🪜',id:'rail',n:'계단 난간 구석',fn(){if(f.rail){say('더 나올 것이 없다.');return;}f.rail=1;give('card4');say('난간 구석에서 “4”라고 적힌 카드를 찾았다.');}},
+      {i:'⚡',id:'fusebox',n:'벽면 배전반',fn(){
+        if(f.power){say('전원이 들어와 있다.');return;}
+        if(!f.gloves){
+          if(S.sel==='gloves'){f.gloves=1;take('gloves');say('장갑을 끼고 배전반 문을 열었다. 빈 퓨즈 자리와 레버 자리가 보인다.');return;}
+          say('전선이 드러나 있다. 맨손으로 만지면 위험하다.');return;}
+        if(S.sel==='fuse'){f.fuse=1;take('fuse');say('퓨즈를 끼우자 파직, 불꽃이 튀었다.');return;}
+        if(S.sel==='lever'){
+          if(!f.fuse){say('레버를 끼우기 전에 빈 퓨즈 자리부터 채워야 할 것 같다.');return;}
+          f.power=1;take('lever');say('레버를 끼워 올리자 제어판에 희미한 불이 들어왔다.');return;}
+        say(f.fuse?'퓨즈는 끼웠다. 레버 자리가 비어 있다.':'배전반 안에 퓨즈 자리와 레버 자리가 비어 있다.');}},
+      {i:'🎛️',id:'panel',n:'제어판',fn(){
+        if(S.sel==='card2'||S.sel==='card4'){
+          const n=S.sel==='card2'?2:4;S.mount[n-1]=true;take('card'+n);say('제어판의 '+n+'번 자리에 카드를 꽂았다.');return;}
+        if(!f.power){say('제어판은 먹통이다. 전원이 들어오지 않는다.');return;}
+        panelPop();}},
+      {i:'⏲️',id:'gauge',n:'압력 게이지',fn(){say('바늘이 0에 멈춰 있다.');}},
+      {i:'🔭',id:'lens',n:'거대한 렌즈',fn(){say('먼지 낀 거대한 렌즈다. 불이 켜지면 바다 멀리까지 빛을 보낼 것이다.');}},
+      {i:'🧭',id:'compass',n:'고장 난 나침반',fn(){say('바늘이 빙글빙글 돈다. 제어판 근처에 전류가 흐르는 듯하다.');}},
+      {i:'🗺️',id:'map',n:'벽면 섬 지도',fn(){say('섬 지도다. 부두 쪽에 낡은 창고가 그려져 있다.');}},
+      {i:'🌊',id:'sea',n:'폭풍 속 바다',fn(){say('파도가 거세다. 창은 굳게 닫혀 있다.');}}
+    ]},
+  r3:{title:'방 3 · 부두 창고',goal:'가짜 상자를 찾아 해치를 열어라.',
+    introTitle:'부두 창고',intro:['새벽 안개가 낮게 깔린 부두. 낡은 창고 안에 상자 다섯 개가 놓여 있다.','그 가운데 하나는 등대지기가 몰래 섞어 둔 가짜다.'],introBtn:'주위를 둘러본다',
+    hints:['가방에서 돋보기를 고른 뒤 번진 장부를 눌러 보자. 바코드 다섯 개는 모둠이 나눠 계산하자.','앞 일곱 자리에 3, 1, 3, 1, 3, 1, 3을 곱해 더하면 마지막 자리가 정해진다. 합은 10의 배수가 되어야 한다.','2번 상자만 맞지 않는다. 해치에는 가짜 상자의 번호와 올바른 마지막 자리를 이어 쓴다.'],
+    hot:[
+      {i:'📖',id:'ledger',n:'관리 데스크 장부',fn(){ledger3();}},
+      {i:'🧰',id:'shelf',n:'선반 위 도구함',fn(){if(f.shelf){say('더 나올 것이 없다.');return;}f.shelf=1;give('crowbar');say('녹슨 쇠지렛대가 들어 있다.');}},
+      crateHot(1),crateHot(2),crateHot(3),crateHot(4),crateHot(5),
+      {i:'🕳️',id:'hatch',n:'바닥 철제 해치',fn(){hatchPop();}},
+      {i:'🕸️',id:'nets',n:'찢어진 어망',fn(){say('비린내가 진동한다. 마른 조개껍데기뿐이다.');}},
+      {i:'🚜',id:'forklift',n:'녹슨 지게차',fn(){say('시동 키가 뽑혀 있고 바퀴에 바람이 빠져 있다.');}},
+      {i:'⛵',id:'boat',n:'묶인 나룻배',fn(){say('노가 부러져 있어 타고 나갈 수 없다.');}},
+      {i:'🏮',id:'barrel',n:'통 위의 등불',fn(){say('등불이 흔들린다. 통 뚜껑에는 분필 자국이 있다.');}}
+    ]},
+  v:{title:'금고 · 등대지기의 방',goal:'금고를 열어라.',
+    introTitle:'등대지기의 방',intro:['작은 방 한가운데 무쇠 금고가 웅크리고 있다.','사다리를 내려서자 금고 문의 링이 하나씩 빛나기 시작한다.'],introBtn:'주위를 둘러본다',
+    onEnter:()=>ringLayer(false),
+    after:['금고 속 양피지를 눌러 보자. 아웃으로 나온 숫자부터 모두 지우자.','같은 숫자가 나온 두 줄을 비교하면 그 숫자의 자리를 좁힐 수 있다.','첫째 암호 세 자리 뒤에 둘째 암호 세 자리를 이어 상자에 넣는다.'],
+    hints:['금고 문을 눌러 보자.','1부터 9까지를 모두 더하면 45다. 가로줄이 셋이면 한 줄의 합은 얼마일까?','한 줄의 합은 15다. 두 칸이 채워진 줄부터 남은 수를 구하자.'],
+    hot:[
+      {i:'🔒',id:'ring',n:'금고 문',fn(){magicPop();}},
+      {i:'🖼️',id:'portrait',n:'등대지기 초상화',fn(){say('온화한 미소의 노인 초상화다. 빵집 할머니와 어딘가 닮았다.');}},
+      {i:'🍪',id:'cookiebox',n:'빈 쿠키 상자',fn(){say('체험학습 첫날 받았던 쿠키 상자와 같은 상자다.');}},
+      {i:'🧭',id:'sextant',n:'황동 육분의',fn(){say('별의 높이를 재어 배의 위치를 찾는 도구다.');}},
+      {i:'🔭',id:'spyglass',n:'창턱의 망원경',fn(){say('멀리 등대 불빛이 흔들린다.');}}
+    ]}
+};
+
+newState();
+story(INTRO.title,INTRO.lines,'눈을 뜬다',()=>startRoom('r1',[]));
+</script>
+</body>
+</html>
